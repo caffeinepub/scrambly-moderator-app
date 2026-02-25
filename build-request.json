@@ -1,192 +1,131 @@
 {
   "kind": "build_request",
-  "title": "Scrambly Moderation Platform — Moderator & Admin Dashboard",
-  "projectName": "Scrambly Mod Hub",
+  "title": "Add Persistent Floating Music Player and Settings Page with Background Music",
+  "projectName": "Scrambly Moderator",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Build a backend data model and actor with the following entities: User (id, username, status: active/warned/banned, warningCount, banReason, banAppealText, banAppealStatus: none/pending/reviewed, isBanned), Moderator (id, principal, name, status: active/banned, banReason), Warning (id, targetUserId, issuedByModeratorId, reason, timestamp), ModeratorReport (id, reportedModeratorId, reportedByUserId, reason, timestamp, status: pending/resolved), and a hardcoded admin identity for 'Jourdain Rodriguez'. Persist all data in stable storage.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-3"
-        ],
-        "quotes": [
-          "the admin is Jourdain Rodriguez",
-          "moderators get as much warnings they can give the users",
-          "the admin can ban the moderators too"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All entities are stored in stable variables and survive canister upgrades.",
-        "Admin identity is locked to 'Jourdain Rodriguez' by name/principal.",
-        "Warning records track which moderator issued them and when.",
-        "ModeratorReport records track status (pending/resolved)."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Implement backend functions for moderator actions: issueWarning(userId, reason) — add a warning to a user with no cap on how many warnings can be given; banUser(userId, reason) — ban a user for disrespectful, unkind, or inappropriate behavior; instantBanUser(userId) — immediately ban a user flagged for pornographic content (ban takes effect instantly, no confirmation step); all three functions must be callable only by authenticated moderators (not banned moderators).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-3"
-        ],
-        "quotes": [
-          "moderators get as much warnings they can give the users",
-          "pornographic should be banned instantly",
-          "the moderator can choose to ban"
-        ]
-      },
-      "acceptanceCriteria": [
-        "issueWarning stores a Warning record linked to the moderator's ID.",
-        "banUser sets user status to banned with the given reason.",
-        "instantBanUser sets user status to banned immediately with reason 'Pornographic content'.",
-        "Banned moderators cannot call any moderation function.",
-        "Functions return an error if called by a non-moderator identity."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Implement backend functions for the ban appeal system: submitAppeal(userId, appealText) — lets a banned user submit an appeal message; reviewAppeal(userId, decision: approve/deny) — admin-only function to approve (unban) or deny the appeal; getMyAppealStatus(userId) — returns current appeal status for a user.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-3"
-        ],
-        "quotes": [
-          "banned instantly untill appeal is applied"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A banned user can submit exactly one pending appeal at a time.",
-        "On appeal approval, user status is reset to active and ban is lifted.",
-        "On appeal denial, ban remains and appeal status is set to 'reviewed'.",
-        "Only the admin can call reviewAppeal.",
-        "Appeal status is readable by the user and the admin."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Implement backend functions for the report-a-moderator system: reportModerator(moderatorId, reason) — lets a user who received at least one warning report the moderator who issued it; getModeratorReports() — admin-only query to list all pending reports; resolveModeratorReport(reportId, banModerator: Bool) — admin-only function to mark the report resolved and optionally ban the reported moderator.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-3"
-        ],
-        "quotes": [
-          "if the users get 1 warning for bad reason they can report the moderator for a ban to the admin",
-          "the admin can ban the moderator"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Only users who have at least one warning on record can submit a moderator report.",
-        "Each report is stored with status 'pending' until the admin resolves it.",
-        "When banModerator is true on resolution, the moderator's status is set to banned.",
-        "Only the admin can call getModeratorReports and resolveModeratorReport.",
-        "A moderator who is banned cannot issue warnings or bans."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Build an admin panel page (accessible only to Jourdain Rodriguez) that shows: (1) a list of all moderators with their status and a 'Ban Moderator' action button for active moderators; (2) a list of all pending moderator reports with reporter info, reason, and 'Ban Moderator' / 'Dismiss' action buttons; (3) a list of all pending ban appeals with user info, appeal text, and 'Approve Appeal' / 'Deny Appeal' action buttons.",
+      "id": "REQ-34",
+      "text": "Create a persistent floating music player component (frontend/src/components/FloatingMusicPlayer.tsx) fixed to the bottom-right corner of all pages. The player must: (1) embed and play YouTube tracks via the YouTube IFrame API in a hidden iframe; (2) include a pre-defined Sonic track rotation in order: Angel Island Zone Act 1, Angel Island Zone Act 2, Chemical Plant Zone, Green Hill Zone, Emerald Hill Zone, Ice Cap Zone, Flying Battery Zone, Hydrocity Zone — each mapped to a real YouTube video ID; (3) render left (⬅️) and right (➡️) arrow buttons to navigate to the previous/next track, wrapping around at the ends; (4) render an On/Off toggle button to enable or disable music playback; (5) render a volume slider from 0 to 100 with left/right nudge buttons (each nudge adjusts volume by 5 units); (6) auto-loop the current track when it ends; (7) persist current track index, volume level, and on/off state in sessionStorage so the player state survives navigation between pages within the session; (8) display the current track name above the controls.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-3"
+          "msg-recent-1"
         ],
         "quotes": [
-          "the admin can ban the moderators too",
-          "report the moderator for a ban to the admin",
-          "the admin can ban the moderator"
+          "Add background music and add options to turn on or off background music have options for background music as angel island act 1 on loop and ad they press the arrow right it switched the music to angel island act 2",
+          "when they press volume button left is to turn it down and 0 means muted and 100 means loud and they have options to slide the slider to a decent percentage of volume on music",
+          "The music will be background music"
         ]
       },
       "acceptanceCriteria": [
-        "Admin panel is only visible/accessible when logged in as Jourdain Rodriguez.",
-        "All three sections are visible in the admin panel with live data from the backend.",
-        "Clicking 'Ban Moderator' calls the resolveModeratorReport or direct ban function and updates the UI.",
-        "Approve/Deny buttons on appeals call the reviewAppeal function and refresh the list."
+        "Floating player is visible and accessible on every page of the app",
+        "Player is fixed to the bottom-right corner and does not obstruct main content",
+        "Right arrow advances to the next track; left arrow goes to the previous track",
+        "Track wraps from last to first and first to last when cycling",
+        "On/Off toggle starts and stops playback",
+        "Volume slider ranges from 0 (muted) to 100 (full volume)",
+        "Left and right nudge buttons adjust volume by 5 units per click",
+        "Track auto-loops when it reaches the end",
+        "Current track name is displayed in the player UI",
+        "Player state (track index, volume, on/off) is restored from sessionStorage after navigating between pages"
       ]
     },
     {
-      "id": "REQ-6",
-      "text": "Build a moderator dashboard page (accessible only to active, non-banned moderators) that shows: (1) a searchable list of all users with their current status (active/warned/banned) and warning count; (2) per-user action buttons: 'Issue Warning' (with a reason input), 'Ban User' (with a reason input), and 'Instant Ban for Pornographic Content' (one-click, no extra input); (3) a disabled/greyed-out state for all action buttons if the moderator is banned.",
+      "id": "REQ-35",
+      "text": "Mount the FloatingMusicPlayer component in the root App layout (frontend/src/App.tsx or frontend/src/components/Layout.tsx) so it renders persistently on all pages regardless of route.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-3"
+          "msg-recent-1"
         ],
         "quotes": [
-          "moderators get as much warnings they can give the users",
-          "the moderator can choose to ban",
-          "pornographic should be banned instantly"
+          "The music will be background music"
         ]
       },
       "acceptanceCriteria": [
-        "Moderator dashboard is only visible to authenticated moderators.",
-        "User list updates in real time after any moderation action.",
-        "Issue Warning opens an inline form for a reason, then submits.",
-        "Ban User opens an inline form for a reason, then submits.",
-        "Instant Ban button immediately fires instantBanUser without additional input.",
-        "If moderator is banned, all action buttons are disabled with a 'Your account has been suspended' notice."
+        "FloatingMusicPlayer is rendered on every route including HomePage, AdminPanel, ModeratorDashboard, UserStatus, and any Settings page",
+        "Player does not unmount or reset when the user navigates between pages"
       ]
     },
     {
-      "id": "REQ-7",
-      "text": "Build a user-facing status page where a user can: (1) see if they are banned and the reason; (2) submit a ban appeal with a text message if no appeal is currently pending; (3) view their current appeal status (none / pending / approved / denied); (4) view their list of received warnings with reasons and timestamps; (5) report a moderator (with a reason text field) if they have received at least one warning — this submits a moderator report to the admin.",
+      "id": "REQ-36",
+      "text": "Create a new Settings page (frontend/src/pages/SettingsPage.tsx) accessible from the main navigation to all authenticated users. The page must include a 'Background Music' section that: (1) lists all tracks in the Sonic rotation (same 8 tracks as the floating player) with a 'Select' button per track to set it as the active track; (2) highlights the currently active track; (3) provides an 'Import YouTube URL' input field and an 'Add Track' button — when a valid YouTube URL is submitted, it is parsed for the video ID and appended to the user's track rotation for the session; (4) includes a volume slider (0–100) and on/off toggle mirrored from the floating player state (changes here update the floating player and vice versa via shared sessionStorage state); (5) displays an error if an invalid or empty YouTube URL is submitted.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-3"
+          "msg-recent-2",
+          "msg-recent-3"
         ],
         "quotes": [
-          "banned instantly untill appeal is applied",
-          "if the users get 1 warning for bad reason they can report the moderator for a ban to the admin"
+          "in settings account and background music and access music settings and you will see the tracks or you can import a song or video",
+          "Import source: Users paste a YouTube URL to add custom tracks",
+          "Settings page: The Background Music section lives inside a new dedicated Settings page accessible from the main navigation"
         ]
       },
       "acceptanceCriteria": [
-        "Banned users see a clear 'You are banned' notice with the reason.",
-        "Appeal form is shown only when user is banned and has no pending appeal.",
-        "Appeal status ('Pending review', 'Approved', 'Denied') is shown when an appeal exists.",
-        "Warning history shows each warning's reason and date.",
-        "'Report a Moderator' section is visible only if user has at least one warning and allows selecting which moderator to report with a reason."
+        "Settings page is linked from the main navigation and accessible to all authenticated users",
+        "Background Music section lists all 8 Sonic tracks with individual Select buttons",
+        "Currently active track is visually highlighted",
+        "Selecting a track from the list switches the floating player to that track",
+        "YouTube URL input field accepts a pasted URL; clicking 'Add Track' appends the track to the rotation",
+        "Invalid or empty URL submissions show an inline error message",
+        "Volume slider and on/off toggle on the Settings page reflect and update the floating player state",
+        "Changes made on the Settings page are immediately reflected in the floating player"
       ]
     },
     {
-      "id": "REQ-8",
-      "text": "Apply a bold, dark-themed visual design across the entire app: deep charcoal/near-black backgrounds, high-contrast accent color (e.g., red-orange for destructive actions, teal/green for approvals), clean sans-serif typography, card-based layout for lists and panels, and clear visual hierarchy that communicates authority and safety for a moderation context.",
+      "id": "REQ-37",
+      "text": "Add a 'Settings' navigation link in the main app header/navbar (frontend/src/components/Layout.tsx) that routes to the new Settings page. This link must be visible to all authenticated users.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-3"
+          "msg-recent-2"
+        ],
+        "quotes": [
+          "Settings page accessible from the main navigation"
         ]
       },
       "acceptanceCriteria": [
-        "All pages share a consistent color palette and typography.",
-        "Destructive actions (ban, instant ban) use a red or red-orange color.",
-        "Positive actions (approve appeal, dismiss report) use a teal or green color.",
-        "Layout is clean, card-based, and usable on desktop screens."
+        "A 'Settings' link appears in the main navigation for all authenticated users",
+        "Clicking the link navigates to the Settings page",
+        "The Settings link is not shown to unauthenticated users"
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "text": "Register the Settings page route in the TanStack Router configuration (frontend/src/App.tsx) at a path such as '/settings', wrapped in an AuthGuard so only authenticated users can access it.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent-2"
+        ],
+        "quotes": [
+          "new dedicated Settings page accessible from the main navigation"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Navigating to /settings renders the SettingsPage component",
+        "Unauthenticated users are redirected away from /settings by the AuthGuard",
+        "The route is included in the TanStack Router tree"
       ]
     }
   ],
   "constraints": [
-    "The admin identity is exclusively 'Jourdain Rodriguez' — no other user can access admin functions.",
-    "Banned moderators must not be able to perform any moderation actions.",
-    "Pornographic content bans must be instant with no extra confirmation step required from the moderator.",
-    "Do not expose the caffeineAdminToken URL in any part of the application."
+    "Do not modify any files listed under frontend.immutablePaths",
+    "All YouTube playback must use the YouTube IFrame API (no direct audio file uploads or streaming)",
+    "No backend changes are required for this feature — all music state is client-side (sessionStorage)",
+    "The floating music player must not obstruct or overlap critical UI elements such as modals or action buttons"
   ],
   "nonGoals": [
-    "Real-time chat or messaging between moderators and users.",
-    "Automated content scanning or AI moderation.",
-    "Email or push notification alerts.",
-    "Multiple admin accounts — only one admin (Jourdain Rodriguez) is supported.",
-    "OAuth or third-party login — only Internet Identity is supported."
+    "Storing music preferences in the backend or on-chain",
+    "Uploading local audio or video files from the user's device",
+    "Streaming licensed audio files directly (only YouTube embeds)",
+    "Showing the music player to unauthenticated users",
+    "Any changes to existing moderation, admin, or user-status features"
   ],
   "imageRequirements": {
-    "required": [
-      "Dark shield badge logo with a stylized 'S' monogram, authority-themed moderation emblem (scrambly-mod-logo.dim_256x256.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

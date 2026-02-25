@@ -5,16 +5,17 @@ import {
   createRootRoute,
   RouterProvider,
   Outlet,
-  redirect,
 } from '@tanstack/react-router';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
 import Layout from './components/Layout';
 import ProfileSetupModal from './components/ProfileSetupModal';
+import FloatingMusicPlayer from './components/FloatingMusicPlayer';
 import HomePage from './pages/HomePage';
 import AdminPanel from './pages/AdminPanel';
 import ModeratorDashboard from './pages/ModeratorDashboard';
 import UserStatus from './pages/UserStatus';
+import SettingsPage from './pages/SettingsPage';
 import AccessDenied from './pages/AccessDenied';
 import { useInternetIdentity } from './hooks/useInternetIdentity';
 import { useIsCallerAdmin } from './hooks/useQueries';
@@ -31,6 +32,7 @@ function RootLayout() {
   return (
     <Layout>
       <ProfileSetupModal open={showProfileSetup} />
+      <FloatingMusicPlayer />
       <Outlet />
     </Layout>
   );
@@ -107,11 +109,22 @@ const statusRoute = createRoute({
   ),
 });
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  component: () => (
+    <AuthGuard>
+      <SettingsPage />
+    </AuthGuard>
+  ),
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   adminRoute,
   moderatorRoute,
   statusRoute,
+  settingsRoute,
 ]);
 
 const router = createRouter({ routeTree });

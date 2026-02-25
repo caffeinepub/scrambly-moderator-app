@@ -1,484 +1,697 @@
 import React, { useState } from 'react';
-import { Shield, Users, AlertTriangle, CheckCircle, XCircle, Ban, UserPlus, Loader2, RefreshCw } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Principal } from '@dfinity/principal';
+import { Shield, Users, AlertTriangle, FileText, ChevronDown, ChevronUp, Loader2, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  useGetAllUsers,
   useGetAllModerators,
   useGetModeratorReports,
-  useGetPendingAppeals,
   useResolveModeratorReport,
   useReviewAppeal,
   useAddModerator,
   useAddUser,
+  useGetModeratorApplications,
+  useRespondToModeratorReport,
+  useRespondToAppeal,
+  useRespondToModeratorApplication,
+  Variant_deny_approve,
 } from '../hooks/useQueries';
-import { Variant_deny_approve, type Moderator, type ModeratorReport, type User } from '../backend';
-import { toast } from 'sonner';
-
-function ModeratorCard({ moderator }: { moderator: Moderator }) {
-  const [banning, setBanning] = useState(false);
-  const addModerator = useAddModerator();
-
-  const isBanned = moderator.status === 'banned';
-
-  return (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
-      <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${
-          isBanned ? 'bg-destructive/20 text-destructive' : 'bg-primary/20 text-primary'
-        }`}>
-          {moderator.name.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <p className="font-medium text-foreground text-sm">{moderator.name}</p>
-          <p className="text-xs text-muted-foreground font-mono truncate max-w-[200px]">{moderator.id}</p>
-          {isBanned && moderator.banReason && (
-            <p className="text-xs text-destructive mt-0.5">Reason: {moderator.banReason}</p>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Badge variant={isBanned ? 'destructive' : 'default'} className="text-xs">
-          {isBanned ? 'Banned' : 'Active'}
-        </Badge>
-      </div>
-    </div>
-  );
-}
-
-function ReportCard({ report, moderatorName }: { report: ModeratorReport; moderatorName: string }) {
-  const resolve = useResolveModeratorReport();
-
-  const handleResolve = async (banModerator: boolean) => {
-    try {
-      await resolve.mutateAsync({ reportId: report.id, banModerator });
-      toast.success(banModerator ? 'Moderator banned and report resolved.' : 'Report dismissed.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to resolve report.');
-    }
-  };
-
-  const date = new Date(Number(report.timestamp) / 1_000_000);
-
-  return (
-    <div className="p-4 rounded-lg bg-secondary/50 border border-border space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-medium text-foreground">
-            Report against: <span className="text-primary">{moderatorName}</span>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            By user: <span className="font-mono">{report.reportedByUserId.slice(0, 20)}...</span>
-          </p>
-          <p className="text-xs text-muted-foreground">{date.toLocaleDateString()} {date.toLocaleTimeString()}</p>
-        </div>
-        <Badge variant="outline" className="text-xs shrink-0">Pending</Badge>
-      </div>
-      <p className="text-sm text-muted-foreground bg-background/50 p-3 rounded-md border border-border">
-        {report.reason}
-      </p>
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => handleResolve(true)}
-          disabled={resolve.isPending}
-          className="gap-1.5"
-        >
-          {resolve.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
-          Ban Moderator
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => handleResolve(false)}
-          disabled={resolve.isPending}
-          className="gap-1.5 border-positive/50 text-positive hover:bg-positive/10"
-        >
-          {resolve.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-          Dismiss
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function AppealCard({ user }: { user: User }) {
-  const reviewAppeal = useReviewAppeal();
-
-  const handleReview = async (decision: Variant_deny_approve) => {
-    try {
-      await reviewAppeal.mutateAsync({ userId: user.id, decision });
-      toast.success(decision === Variant_deny_approve.approve ? 'Appeal approved. User unbanned.' : 'Appeal denied.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to review appeal.');
-    }
-  };
-
-  return (
-    <div className="p-4 rounded-lg bg-secondary/50 border border-border space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-medium text-foreground">
-            User: <span className="text-primary">{user.username}</span>
-          </p>
-          <p className="text-xs text-muted-foreground font-mono">{user.id.slice(0, 30)}...</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Ban reason: <span className="text-destructive">{user.banReason}</span>
-          </p>
-        </div>
-        <Badge variant="outline" className="text-xs shrink-0 border-warning/50 text-warning-custom">
-          Pending Appeal
-        </Badge>
-      </div>
-      <div className="bg-background/50 p-3 rounded-md border border-border">
-        <p className="text-xs text-muted-foreground mb-1 font-medium">Appeal text:</p>
-        <p className="text-sm text-foreground">{user.banAppealText}</p>
-      </div>
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          onClick={() => handleReview(Variant_deny_approve.approve)}
-          disabled={reviewAppeal.isPending}
-          className="gap-1.5 bg-positive/20 text-positive hover:bg-positive/30 border border-positive/30"
-          variant="outline"
-        >
-          {reviewAppeal.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-          Approve
-        </Button>
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => handleReview(Variant_deny_approve.deny)}
-          disabled={reviewAppeal.isPending}
-          className="gap-1.5"
-        >
-          {reviewAppeal.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
-          Deny
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function AddModeratorForm() {
-  const [principal, setPrincipal] = useState('');
-  const [name, setName] = useState('');
-  const addModerator = useAddModerator();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!principal.trim() || !name.trim()) return;
-    try {
-      await addModerator.mutateAsync({ principal: principal.trim(), name: name.trim() });
-      toast.success(`Moderator "${name}" added successfully.`);
-      setPrincipal('');
-      setName('');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add moderator.');
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 p-4 rounded-lg bg-secondary/50 border border-border">
-      <p className="text-sm font-medium text-foreground flex items-center gap-2">
-        <UserPlus className="w-4 h-4 text-primary" />
-        Add New Moderator
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label className="text-xs">Principal ID</Label>
-          <Input
-            value={principal}
-            onChange={(e) => setPrincipal(e.target.value)}
-            placeholder="aaaaa-bbbbb-..."
-            className="bg-input border-border text-sm h-9"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Name</Label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Moderator name"
-            className="bg-input border-border text-sm h-9"
-          />
-        </div>
-      </div>
-      <Button type="submit" size="sm" disabled={addModerator.isPending || !principal.trim() || !name.trim()} className="gap-2">
-        {addModerator.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
-        Add Moderator
-      </Button>
-    </form>
-  );
-}
-
-function AddUserForm() {
-  const [userId, setUserId] = useState('');
-  const [username, setUsername] = useState('');
-  const addUser = useAddUser();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userId.trim() || !username.trim()) return;
-    try {
-      await addUser.mutateAsync({ userId: userId.trim(), username: username.trim() });
-      toast.success(`User "${username}" added successfully.`);
-      setUserId('');
-      setUsername('');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add user.');
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 p-4 rounded-lg bg-secondary/50 border border-border">
-      <p className="text-sm font-medium text-foreground flex items-center gap-2">
-        <UserPlus className="w-4 h-4 text-primary" />
-        Add New User
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label className="text-xs">User ID (Principal)</Label>
-          <Input
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="aaaaa-bbbbb-..."
-            className="bg-input border-border text-sm h-9"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Username</Label>
-          <Input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="username"
-            className="bg-input border-border text-sm h-9"
-          />
-        </div>
-      </div>
-      <Button type="submit" size="sm" disabled={addUser.isPending || !userId.trim() || !username.trim()} className="gap-2">
-        {addUser.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
-        Add User
-      </Button>
-    </form>
-  );
-}
+import { Variant_active_banned_warned, Variant_pending_none_reviewed } from '../backend';
 
 export default function AdminPanel() {
-  const { data: moderators = [], isLoading: modsLoading, refetch: refetchMods } = useGetAllModerators();
-  const { data: reports = [], isLoading: reportsLoading, refetch: refetchReports } = useGetModeratorReports();
-  const { data: appeals = [], isLoading: appealsLoading, refetch: refetchAppeals } = useGetPendingAppeals();
+  const navigate = useNavigate();
 
-  const moderatorMap = React.useMemo(() => {
-    const map: Record<string, string> = {};
-    moderators.forEach((m) => { map[m.id] = m.name; });
-    return map;
-  }, [moderators]);
+  // Data queries
+  const { data: users = [], isLoading: usersLoading } = useGetAllUsers();
+  const { data: moderators = [], isLoading: moderatorsLoading } = useGetAllModerators();
+  const { data: reports = [], isLoading: reportsLoading } = useGetModeratorReports();
+  const { data: applications = [], isLoading: applicationsLoading } = useGetModeratorApplications();
 
-  const activeMods = moderators.filter((m) => m.status === 'active');
-  const bannedMods = moderators.filter((m) => m.status === 'banned');
+  // Mutations
+  const resolveReport = useResolveModeratorReport();
+  const reviewAppeal = useReviewAppeal();
+  const addModerator = useAddModerator();
+  const addUser = useAddUser();
+  const respondToReport = useRespondToModeratorReport();
+  const respondToAppeal = useRespondToAppeal();
+  const respondToApplication = useRespondToModeratorApplication();
+
+  // Form state
+  const [newModeratorPrincipal, setNewModeratorPrincipal] = useState('');
+  const [newModeratorName, setNewModeratorName] = useState('');
+  const [newUserId, setNewUserId] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+
+  // Response form state - tracks which item has the response form open
+  const [reportResponseOpen, setReportResponseOpen] = useState<string | null>(null);
+  const [reportResponseText, setReportResponseText] = useState<Record<string, string>>({});
+
+  const [appealResponseOpen, setAppealResponseOpen] = useState<string | null>(null);
+  const [appealResponseText, setAppealResponseText] = useState<Record<string, string>>({});
+
+  const [applicationResponseOpen, setApplicationResponseOpen] = useState<string | null>(null);
+  const [applicationResponseText, setApplicationResponseText] = useState<Record<string, string>>({});
+
+  // Pending appeals
+  const pendingAppeals = users.filter(
+    (u) => u.banAppealStatus === Variant_pending_none_reviewed.pending
+  );
+
+  const handleAddModerator = async () => {
+    if (!newModeratorPrincipal || !newModeratorName) return;
+    try {
+      const principal = Principal.fromText(newModeratorPrincipal);
+      await addModerator.mutateAsync({ principal, name: newModeratorName });
+      setNewModeratorPrincipal('');
+      setNewModeratorName('');
+    } catch (e: any) {
+      // toast handled in hook
+    }
+  };
+
+  const handleAddUser = async () => {
+    if (!newUserId || !newUsername) return;
+    await addUser.mutateAsync({ userId: newUserId, username: newUsername });
+    setNewUserId('');
+    setNewUsername('');
+  };
+
+  const handleSubmitReportResponse = async (reportId: string) => {
+    const text = reportResponseText[reportId] || '';
+    if (!text.trim()) return;
+    await respondToReport.mutateAsync({ reportId: BigInt(reportId), response: text });
+    setReportResponseOpen(null);
+    setReportResponseText((prev) => ({ ...prev, [reportId]: '' }));
+  };
+
+  const handleSubmitAppealResponse = async (userId: string) => {
+    const text = appealResponseText[userId] || '';
+    if (!text.trim()) return;
+    try {
+      const principal = Principal.fromText(userId);
+      await respondToAppeal.mutateAsync({ userId: principal, response: text });
+      setAppealResponseOpen(null);
+      setAppealResponseText((prev) => ({ ...prev, [userId]: '' }));
+    } catch (e: any) {
+      // toast handled in hook
+    }
+  };
+
+  const handleSubmitApplicationResponse = async (applicationId: string) => {
+    const text = applicationResponseText[applicationId] || '';
+    if (!text.trim()) return;
+    await respondToApplication.mutateAsync({ applicationId: BigInt(applicationId), response: text });
+    setApplicationResponseOpen(null);
+    setApplicationResponseText((prev) => ({ ...prev, [applicationId]: '' }));
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-destructive/20 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-destructive" />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Admin Panel</h1>
-            <p className="text-sm text-muted-foreground">Full moderation oversight — Jourdain Rodriguez</p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          {[
-            { label: 'Total Moderators', value: moderators.length, color: 'text-primary', icon: Shield },
-            { label: 'Active Mods', value: activeMods.length, color: 'text-positive', icon: CheckCircle },
-            { label: 'Pending Reports', value: reports.length, color: 'text-warning-custom', icon: AlertTriangle },
-            { label: 'Pending Appeals', value: appeals.length, color: 'text-destructive', icon: Users },
-          ].map(({ label, value, color, icon: Icon }) => (
-            <Card key={label} className="bg-card border-border">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Icon className={`w-4 h-4 ${color}`} />
-                  <span className="text-xs text-muted-foreground">{label}</span>
-                </div>
-                <p className={`text-2xl font-display font-bold ${color}`}>{value}</p>
-              </CardContent>
-            </Card>
-          ))}
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="flex items-center gap-3 mb-8">
+        <Shield className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-display font-bold text-foreground">Admin Panel</h1>
+          <p className="text-muted-foreground">Manage users, moderators, and platform safety</p>
         </div>
       </div>
 
-      <Tabs defaultValue="moderators" className="space-y-4">
-        <TabsList className="bg-secondary border border-border">
-          <TabsTrigger value="moderators" className="gap-2 data-[state=active]:bg-card">
-            <Shield className="w-4 h-4" />
+      <Tabs defaultValue="moderators" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="moderators">
+            <Shield className="h-4 w-4 mr-1" />
             Moderators
-            {moderators.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">{moderators.length}</Badge>
-            )}
           </TabsTrigger>
-          <TabsTrigger value="reports" className="gap-2 data-[state=active]:bg-card">
-            <AlertTriangle className="w-4 h-4" />
+          <TabsTrigger value="reports">
+            <AlertTriangle className="h-4 w-4 mr-1" />
             Reports
-            {reports.length > 0 && (
-              <Badge variant="destructive" className="ml-1 text-xs px-1.5 py-0">{reports.length}</Badge>
-            )}
           </TabsTrigger>
-          <TabsTrigger value="appeals" className="gap-2 data-[state=active]:bg-card">
-            <CheckCircle className="w-4 h-4" />
+          <TabsTrigger value="appeals">
+            <FileText className="h-4 w-4 mr-1" />
             Appeals
-            {appeals.length > 0 && (
-              <Badge variant="outline" className="ml-1 text-xs px-1.5 py-0 border-warning/50 text-warning-custom">{appeals.length}</Badge>
-            )}
           </TabsTrigger>
-          <TabsTrigger value="manage" className="gap-2 data-[state=active]:bg-card">
-            <UserPlus className="w-4 h-4" />
-            Manage
+          <TabsTrigger value="applications">
+            <ClipboardList className="h-4 w-4 mr-1" />
+            Applications
+          </TabsTrigger>
+          <TabsTrigger value="users">
+            <Users className="h-4 w-4 mr-1" />
+            Users
           </TabsTrigger>
         </TabsList>
 
-        {/* Moderators Tab */}
-        <TabsContent value="moderators" className="space-y-4">
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="font-display text-base">All Moderators</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => refetchMods()} className="gap-1.5 text-muted-foreground">
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Refresh
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {modsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : moderators.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Shield className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No moderators yet</p>
-                </div>
-              ) : (
-                <>
-                  {activeMods.length > 0 && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Active ({activeMods.length})</p>
-                      <div className="space-y-2">
-                        {activeMods.map((mod) => <ModeratorCard key={mod.id} moderator={mod} />)}
-                      </div>
-                    </div>
-                  )}
-                  {bannedMods.length > 0 && (
-                    <div>
-                      <Separator className="my-3" />
-                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Banned ({bannedMods.length})</p>
-                      <div className="space-y-2">
-                        {bannedMods.map((mod) => <ModeratorCard key={mod.id} moderator={mod} />)}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Reports Tab */}
-        <TabsContent value="reports" className="space-y-4">
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="font-display text-base">Pending Moderator Reports</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => refetchReports()} className="gap-1.5 text-muted-foreground">
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Refresh
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {reportsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : reports.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No pending reports</p>
-                </div>
-              ) : (
-                <ScrollArea className="max-h-[600px]">
-                  <div className="space-y-3 pr-2">
-                    {reports.map((report) => (
-                      <ReportCard
-                        key={report.id}
-                        report={report}
-                        moderatorName={moderatorMap[report.reportedModeratorId] || report.reportedModeratorId}
-                      />
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Appeals Tab */}
-        <TabsContent value="appeals" className="space-y-4">
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="font-display text-base">Pending Ban Appeals</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => refetchAppeals()} className="gap-1.5 text-muted-foreground">
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Refresh
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {appealsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : appeals.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No pending appeals</p>
-                </div>
-              ) : (
-                <ScrollArea className="max-h-[600px]">
-                  <div className="space-y-3 pr-2">
-                    {appeals.map((user) => (
-                      <AppealCard key={user.id} user={user} />
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Manage Tab */}
-        <TabsContent value="manage" className="space-y-4">
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="font-display text-base">Manage Users & Moderators</CardTitle>
+        {/* ── Moderators Tab ── */}
+        <TabsContent value="moderators" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New Moderator</CardTitle>
+              <CardDescription>Grant moderator access to a principal</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <AddModeratorForm />
-              <Separator />
-              <AddUserForm />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mod-principal">Principal ID</Label>
+                  <Input
+                    id="mod-principal"
+                    placeholder="Enter principal ID"
+                    value={newModeratorPrincipal}
+                    onChange={(e) => setNewModeratorPrincipal(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mod-name">Name</Label>
+                  <Input
+                    id="mod-name"
+                    placeholder="Enter moderator name"
+                    value={newModeratorName}
+                    onChange={(e) => setNewModeratorName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleAddModerator}
+                disabled={addModerator.isPending || !newModeratorPrincipal || !newModeratorName}
+              >
+                {addModerator.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Add Moderator
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Moderators</CardTitle>
+              <CardDescription>{moderators.length} moderator(s) registered</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {moderatorsLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading moderators...
+                </div>
+              ) : moderators.length === 0 ? (
+                <p className="text-muted-foreground">No moderators yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {moderators.map((mod) => (
+                    <div key={mod.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
+                      <div>
+                        <p className="font-medium text-foreground">{mod.name}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{mod.id}</p>
+                      </div>
+                      <Badge variant={mod.status === 'active' ? 'default' : 'destructive'}>
+                        {mod.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Reports Tab ── */}
+        <TabsContent value="reports" className="space-y-4" id="reports">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-display font-semibold text-foreground">Moderator Reports</h2>
+            <Badge variant="outline">{reports.length} pending</Badge>
+          </div>
+
+          {reportsLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading reports...
+            </div>
+          ) : reports.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No pending moderator reports.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {reports.map((report) => (
+                <Card key={report.id} className="border-border">
+                  <CardContent className="pt-4 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs">Report #{report.id}</Badge>
+                          <Badge variant={report.status === 'pending' ? 'secondary' : 'default'}>
+                            {report.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">Moderator:</span> {report.reportedModeratorId}
+                        </p>
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">Reported by:</span> {report.reportedByUserId}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{report.reason}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(Number(report.timestamp) / 1_000_000).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => resolveReport.mutate({ reportId: report.id, banModerator: true })}
+                          disabled={resolveReport.isPending}
+                        >
+                          {resolveReport.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                          Ban Moderator
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => resolveReport.mutate({ reportId: report.id, banModerator: false })}
+                          disabled={resolveReport.isPending}
+                        >
+                          Dismiss
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Admin Response Display */}
+                    {report.adminResponse && (
+                      <div className="mt-2 p-3 rounded-md bg-muted border border-border">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Admin Response:</p>
+                        <p className="text-sm text-foreground">{report.adminResponse}</p>
+                      </div>
+                    )}
+
+                    {/* Response Form Toggle */}
+                    <div className="pt-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs gap-1"
+                        onClick={() =>
+                          setReportResponseOpen(reportResponseOpen === report.id ? null : report.id)
+                        }
+                      >
+                        {reportResponseOpen === report.id ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                        Type your response
+                      </Button>
+
+                      {reportResponseOpen === report.id && (
+                        <div className="mt-2 space-y-2">
+                          <Textarea
+                            placeholder="Type your admin response here..."
+                            value={reportResponseText[report.id] || ''}
+                            onChange={(e) =>
+                              setReportResponseText((prev) => ({ ...prev, [report.id]: e.target.value }))
+                            }
+                            rows={3}
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSubmitReportResponse(report.id)}
+                              disabled={respondToReport.isPending || !reportResponseText[report.id]?.trim()}
+                            >
+                              {respondToReport.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                              Submit Response
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setReportResponseOpen(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── Appeals Tab ── */}
+        <TabsContent value="appeals" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-display font-semibold text-foreground">Ban Appeals</h2>
+            <Badge variant="outline">{pendingAppeals.length} pending</Badge>
+          </div>
+
+          {usersLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading appeals...
+            </div>
+          ) : pendingAppeals.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No pending ban appeals.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {pendingAppeals.map((user) => (
+                <Card key={user.id} className="border-border">
+                  <CardContent className="pt-4 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-foreground">{user.username}</p>
+                          <Badge variant="destructive">Banned</Badge>
+                          <Badge variant="secondary">Appeal Pending</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">Ban reason:</span> {user.banReason}
+                        </p>
+                        {user.banAppealText && (
+                          <div className="p-2 rounded bg-muted text-sm text-foreground">
+                            <span className="font-medium">Appeal:</span> {user.banAppealText}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() =>
+                            reviewAppeal.mutate({ userId: user.id, decision: Variant_deny_approve.approve })
+                          }
+                          disabled={reviewAppeal.isPending}
+                        >
+                          {reviewAppeal.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() =>
+                            reviewAppeal.mutate({ userId: user.id, decision: Variant_deny_approve.deny })
+                          }
+                          disabled={reviewAppeal.isPending}
+                        >
+                          Deny
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Admin Appeal Response Display */}
+                    {user.adminAppealResponse && (
+                      <div className="mt-2 p-3 rounded-md bg-muted border border-border">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Admin Response:</p>
+                        <p className="text-sm text-foreground">{user.adminAppealResponse}</p>
+                      </div>
+                    )}
+
+                    {/* Response Form Toggle */}
+                    <div className="pt-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs gap-1"
+                        onClick={() =>
+                          setAppealResponseOpen(appealResponseOpen === user.id ? null : user.id)
+                        }
+                      >
+                        {appealResponseOpen === user.id ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                        Type your response
+                      </Button>
+
+                      {appealResponseOpen === user.id && (
+                        <div className="mt-2 space-y-2">
+                          <Textarea
+                            placeholder="Type your admin response to this appeal..."
+                            value={appealResponseText[user.id] || ''}
+                            onChange={(e) =>
+                              setAppealResponseText((prev) => ({ ...prev, [user.id]: e.target.value }))
+                            }
+                            rows={3}
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSubmitAppealResponse(user.id)}
+                              disabled={respondToAppeal.isPending || !appealResponseText[user.id]?.trim()}
+                            >
+                              {respondToAppeal.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                              Submit Response
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setAppealResponseOpen(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── Moderator Applications Tab ── */}
+        <TabsContent value="applications" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-display font-semibold text-foreground">Moderator Applications</h2>
+            <Badge variant="outline">{applications.length} total</Badge>
+          </div>
+
+          {applicationsLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading applications...
+            </div>
+          ) : applications.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No moderator applications yet.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {applications.map((app) => (
+                <Card key={app.id} className="border-border">
+                  <CardContent className="pt-4 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs">App #{app.id}</Badge>
+                          <Badge
+                            variant={
+                              app.status === 'approved'
+                                ? 'default'
+                                : app.status === 'denied'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
+                            {app.status}
+                          </Badge>
+                          {app.wasWarned && (
+                            <Badge variant="destructive" className="text-xs">
+                              ⚠ Search Detected
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">Applicant:</span>{' '}
+                          <span className="font-mono text-xs">{app.applicantPrincipal.toString()}</span>
+                        </p>
+                        {app.applicantUserId && (
+                          <p className="text-sm text-foreground">
+                            <span className="font-medium">User ID:</span> {app.applicantUserId}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Submitted: {new Date(Number(app.timestamp) / 1_000_000).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Admin Application Response Display */}
+                    {app.adminResponse && (
+                      <div className="mt-2 p-3 rounded-md bg-muted border border-border">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Admin Response:</p>
+                        <p className="text-sm text-foreground">{app.adminResponse}</p>
+                      </div>
+                    )}
+
+                    {/* Response Form Toggle */}
+                    <div className="pt-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs gap-1"
+                        onClick={() =>
+                          setApplicationResponseOpen(
+                            applicationResponseOpen === app.id ? null : app.id
+                          )
+                        }
+                      >
+                        {applicationResponseOpen === app.id ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                        Add a response
+                      </Button>
+
+                      {applicationResponseOpen === app.id && (
+                        <div className="mt-2 space-y-2">
+                          <Textarea
+                            placeholder="Type your admin response to this application..."
+                            value={applicationResponseText[app.id] || ''}
+                            onChange={(e) =>
+                              setApplicationResponseText((prev) => ({
+                                ...prev,
+                                [app.id]: e.target.value,
+                              }))
+                            }
+                            rows={3}
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSubmitApplicationResponse(app.id)}
+                              disabled={
+                                respondToApplication.isPending ||
+                                !applicationResponseText[app.id]?.trim()
+                              }
+                            >
+                              {respondToApplication.isPending && (
+                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              )}
+                              Submit Response
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setApplicationResponseOpen(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── Users Tab ── */}
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New User</CardTitle>
+              <CardDescription>Register a new user in the system</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="user-id">User ID (Principal)</Label>
+                  <Input
+                    id="user-id"
+                    placeholder="Enter user principal ID"
+                    value={newUserId}
+                    onChange={(e) => setNewUserId(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Enter username"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleAddUser}
+                disabled={addUser.isPending || !newUserId || !newUsername}
+              >
+                {addUser.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Add User
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>All Users</CardTitle>
+              <CardDescription>{users.length} user(s) registered</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {usersLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading users...
+                </div>
+              ) : users.length === 0 ? (
+                <p className="text-muted-foreground">No users yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {users.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-border bg-card"
+                    >
+                      <div>
+                        <p className="font-medium text-foreground">{user.username}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Warnings: {user.warningCount.toString()}/{user.maxWarnings.toString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            user.status === Variant_active_banned_warned.banned
+                              ? 'destructive'
+                              : user.status === Variant_active_banned_warned.warned
+                              ? 'secondary'
+                              : 'default'
+                          }
+                        >
+                          {user.status}
+                        </Badge>
+                        {user.banAppealStatus === Variant_pending_none_reviewed.pending && (
+                          <Badge variant="outline" className="text-xs">
+                            Appeal Pending
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

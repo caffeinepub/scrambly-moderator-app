@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-build-an-admin-panel-page-accessible-only-to-jourdain-rodriguez-that-shows-1-a-list-of-all-moderators-with-their-status-and-a-ban-moderator-action-button-for-active-moderators-2-a-list-of-all-pending-moderator-reports-with-reporter-info-reason-and-ban-moderator-dismiss-action-buttons-3-a-list-of-all-pending-ban-appeals-with-user-info-appeal-text-and-approve-appeal-deny-appeal-action-buttons",
-      "featureTitle": "Build an admin panel page (accessible only to Jourdain Rodriguez) that shows: (1) a list of all moderators with their status and a 'Ban Moderator' action button for active moderators; (2) a list of all pending moderator reports with reporter info, reason, and 'Ban Moderator' / 'Dismiss' action buttons; (3) a list of all pending ban appeals with user info, appeal text, and 'Approve Appeal' / 'Deny Appeal' action buttons.",
+      "featureId": "feature-create-a-persistent-floating-music-player-component-frontend-src-components-floatingmusicplayer-tsx-fixed-to-the-bottom-right-corner-of-all-pages-the-player-must-1-embed-and-play-youtube-tracks-via-the-youtube-iframe-api-in-a-hidden-iframe-2-include-a-pre-defined-sonic-track-rotation-in-order-angel-island-zone-act-1-angel-island-zone-act-2-chemical-plant-zone-green-hill-zone-emerald-hill-zone-ice-cap-zone-flying-battery-zone-hydrocity-zone-each-mapped-to-a-real-youtube-video-id-3-render-left-and-right-arrow-buttons-to-navigate-to-the-previous-next-track-wrapping-around-at-the-ends-4-render-an-on-off-toggle-button-to-enable-or-disable-music-playback-5-render-a-volume-slider-from-0-to-100-with-left-right-nudge-buttons-each-nudge-adjusts-volume-by-5-units-6-auto-loop-the-current-track-when-it-ends-7-persist-current-track-index-volume-level-and-on-off-state-in-sessionstorage-so-the-player-state-survives-navigation-between-pages-within-the-session-8-display-the-current-track-name-above-the-controls",
+      "featureTitle": "Create a persistent floating music player component (frontend/src/components/FloatingMusicPlayer.tsx) fixed to the bottom-right corner of all pages. The player must: (1) embed and play YouTube tracks via the YouTube IFrame API in a hidden iframe; (2) include a pre-defined Sonic track rotation in order: Angel Island Zone Act 1, Angel Island Zone Act 2, Chemical Plant Zone, Green Hill Zone, Emerald Hill Zone, Ice Cap Zone, Flying Battery Zone, Hydrocity Zone — each mapped to a real YouTube video ID; (3) render left (⬅️) and right (➡️) arrow buttons to navigate to the previous/next track, wrapping around at the ends; (4) render an On/Off toggle button to enable or disable music playback; (5) render a volume slider from 0 to 100 with left/right nudge buttons (each nudge adjusts volume by 5 units); (6) auto-loop the current track when it ends; (7) persist current track index, volume level, and on/off state in sessionStorage so the player state survives navigation between pages within the session; (8) display the current track name above the controls.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/AdminPanel.tsx"
+        "frontend/src/components/FloatingMusicPlayer.tsx",
+        "frontend/src/hooks/useMusicPlayer.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,16 +17,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-5"
+        "REQ-34"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-build-a-moderator-dashboard-page-accessible-only-to-active-non-banned-moderators-that-shows-1-a-searchable-list-of-all-users-with-their-current-status-active-warned-banned-and-warning-count-2-per-user-action-buttons-issue-warning-with-a-reason-input-ban-user-with-a-reason-input-and-instant-ban-for-pornographic-content-one-click-no-extra-input-3-a-disabled-greyed-out-state-for-all-action-buttons-if-the-moderator-is-banned",
-      "featureTitle": "Build a moderator dashboard page (accessible only to active, non-banned moderators) that shows: (1) a searchable list of all users with their current status (active/warned/banned) and warning count; (2) per-user action buttons: 'Issue Warning' (with a reason input), 'Ban User' (with a reason input), and 'Instant Ban for Pornographic Content' (one-click, no extra input); (3) a disabled/greyed-out state for all action buttons if the moderator is banned.",
+      "featureId": "feature-mount-the-floatingmusicplayer-component-in-the-root-app-layout-frontend-src-app-tsx-or-frontend-src-components-layout-tsx-so-it-renders-persistently-on-all-pages-regardless-of-route",
+      "featureTitle": "Mount the FloatingMusicPlayer component in the root App layout (frontend/src/App.tsx or frontend/src/components/Layout.tsx) so it renders persistently on all pages regardless of route.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/ModeratorDashboard.tsx"
+        "frontend/src/App.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -37,16 +36,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-6"
+        "REQ-35"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-build-a-user-facing-status-page-where-a-user-can-1-see-if-they-are-banned-and-the-reason-2-submit-a-ban-appeal-with-a-text-message-if-no-appeal-is-currently-pending-3-view-their-current-appeal-status-none-pending-approved-denied-4-view-their-list-of-received-warnings-with-reasons-and-timestamps-5-report-a-moderator-with-a-reason-text-field-if-they-have-received-at-least-one-warning-this-submits-a-moderator-report-to-the-admin",
-      "featureTitle": "Build a user-facing status page where a user can: (1) see if they are banned and the reason; (2) submit a ban appeal with a text message if no appeal is currently pending; (3) view their current appeal status (none / pending / approved / denied); (4) view their list of received warnings with reasons and timestamps; (5) report a moderator (with a reason text field) if they have received at least one warning — this submits a moderator report to the admin.",
+      "featureId": "feature-create-a-new-settings-page-frontend-src-pages-settingspage-tsx-accessible-from-the-main-navigation-to-all-authenticated-users-the-page-must-include-a-background-music-section-that-1-lists-all-tracks-in-the-sonic-rotation-same-8-tracks-as-the-floating-player-with-a-select-button-per-track-to-set-it-as-the-active-track-2-highlights-the-currently-active-track-3-provides-an-import-youtube-url-input-field-and-an-add-track-button-when-a-valid-youtube-url-is-submitted-it-is-parsed-for-the-video-id-and-appended-to-the-user-s-track-rotation-for-the-session-4-includes-a-volume-slider-0-100-and-on-off-toggle-mirrored-from-the-floating-player-state-changes-here-update-the-floating-player-and-vice-versa-via-shared-sessionstorage-state-5-displays-an-error-if-an-invalid-or-empty-youtube-url-is-submitted",
+      "featureTitle": "Create a new Settings page (frontend/src/pages/SettingsPage.tsx) accessible from the main navigation to all authenticated users. The page must include a 'Background Music' section that: (1) lists all tracks in the Sonic rotation (same 8 tracks as the floating player) with a 'Select' button per track to set it as the active track; (2) highlights the currently active track; (3) provides an 'Import YouTube URL' input field and an 'Add Track' button — when a valid YouTube URL is submitted, it is parsed for the video ID and appended to the user's track rotation for the session; (4) includes a volume slider (0–100) and on/off toggle mirrored from the floating player state (changes here update the floating player and vice versa via shared sessionStorage state); (5) displays an error if an invalid or empty YouTube URL is submitted.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/UserStatus.tsx"
+        "frontend/src/pages/SettingsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -57,18 +55,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-7"
+        "REQ-36"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-apply-a-bold-dark-themed-visual-design-across-the-entire-app-deep-charcoal-near-black-backgrounds-high-contrast-accent-color-e-g-red-orange-for-destructive-actions-teal-green-for-approvals-clean-sans-serif-typography-card-based-layout-for-lists-and-panels-and-clear-visual-hierarchy-that-communicates-authority-and-safety-for-a-moderation-context",
-      "featureTitle": "Apply a bold, dark-themed visual design across the entire app: deep charcoal/near-black backgrounds, high-contrast accent color (e.g., red-orange for destructive actions, teal/green for approvals), clean sans-serif typography, card-based layout for lists and panels, and clear visual hierarchy that communicates authority and safety for a moderation context.",
+      "featureId": "feature-add-a-settings-navigation-link-in-the-main-app-header-navbar-frontend-src-components-layout-tsx-that-routes-to-the-new-settings-page-this-link-must-be-visible-to-all-authenticated-users",
+      "featureTitle": "Add a 'Settings' navigation link in the main app header/navbar (frontend/src/components/Layout.tsx) that routes to the new Settings page. This link must be visible to all authenticated users.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/Layout.tsx",
-        "frontend/src/index.css",
-        "frontend/tailwind.config.js"
+        "frontend/src/components/Layout.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -79,7 +74,26 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-8"
+        "REQ-37"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-register-the-settings-page-route-in-the-tanstack-router-configuration-frontend-src-app-tsx-at-a-path-such-as-settings-wrapped-in-an-authguard-so-only-authenticated-users-can-access-it",
+      "featureTitle": "Register the Settings page route in the TanStack Router configuration (frontend/src/App.tsx) at a path such as '/settings', wrapped in an AuthGuard so only authenticated users can access it.",
+      "files": [
+        "frontend/src/App.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-38"
       ],
       "confidence": "high"
     }

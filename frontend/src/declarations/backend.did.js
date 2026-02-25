@@ -9,6 +9,14 @@
 import { IDL } from '@icp-sdk/core/candid';
 
 export const UserId = IDL.Text;
+export const ApplicationResult = IDL.Variant({
+  'failure' : IDL.Record({
+    'removedFromQueue' : IDL.Bool,
+    'message' : IDL.Text,
+  }),
+  'hint' : IDL.Null,
+  'success' : IDL.Null,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -31,6 +39,7 @@ export const User = IDL.Record({
   }),
   'warningCount' : IDL.Nat,
   'username' : IDL.Text,
+  'adminAppealResponse' : IDL.Opt(IDL.Text),
   'banReason' : IDL.Text,
   'banAppealStatus' : IDL.Variant({
     'pending' : IDL.Null,
@@ -39,10 +48,25 @@ export const User = IDL.Record({
   }),
   'isBanned' : IDL.Bool,
   'banAppealText' : IDL.Text,
+  'maxWarnings' : IDL.Nat,
 });
 export const UserProfile = IDL.Record({
   'username' : IDL.Text,
   'name' : IDL.Text,
+});
+export const ApplicationId = IDL.Text;
+export const ModeratorApplication = IDL.Record({
+  'id' : ApplicationId,
+  'status' : IDL.Variant({
+    'pending' : IDL.Null,
+    'denied' : IDL.Null,
+    'approved' : IDL.Null,
+  }),
+  'applicantPrincipal' : IDL.Principal,
+  'wasWarned' : IDL.Bool,
+  'timestamp' : IDL.Int,
+  'applicantUserId' : IDL.Opt(UserId),
+  'adminResponse' : IDL.Opt(IDL.Text),
 });
 export const ReportId = IDL.Text;
 export const ModeratorReport = IDL.Record({
@@ -51,6 +75,7 @@ export const ModeratorReport = IDL.Record({
   'reportedModeratorId' : ModeratorId,
   'timestamp' : IDL.Int,
   'reportedByUserId' : UserId,
+  'adminResponse' : IDL.Opt(IDL.Text),
   'reason' : IDL.Text,
 });
 export const WarningId = IDL.Text;
@@ -61,11 +86,17 @@ export const Warning = IDL.Record({
   'reason' : IDL.Text,
   'targetUserId' : UserId,
 });
+export const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addModerator' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'addUser' : IDL.Func([UserId, IDL.Text], [], []),
+  'applyForModerator' : IDL.Func(
+      [IDL.Text, IDL.Opt(UserId)],
+      [ApplicationResult],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'banUser' : IDL.Func([UserId, IDL.Text], [], []),
@@ -73,6 +104,11 @@ export const idlService = IDL.Service({
   'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getModeratorApplications' : IDL.Func(
+      [],
+      [IDL.Vec(ModeratorApplication)],
+      ['query'],
+    ),
   'getModeratorReports' : IDL.Func([], [IDL.Vec(ModeratorReport)], ['query']),
   'getMyAppealStatus' : IDL.Func([UserId], [IDL.Text], ['query']),
   'getUser' : IDL.Func([UserId], [IDL.Opt(User)], ['query']),
@@ -85,8 +121,12 @@ export const idlService = IDL.Service({
   'instantBanUser' : IDL.Func([UserId], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'issueWarning' : IDL.Func([UserId, IDL.Text], [], []),
+  'recordSearchAttempt' : IDL.Func([IDL.Principal], [IDL.Bool], []),
   'reportModerator' : IDL.Func([ModeratorId, IDL.Text], [], []),
   'resolveModeratorReport' : IDL.Func([ReportId, IDL.Bool], [], []),
+  'respondToAppeal' : IDL.Func([IDL.Principal, IDL.Text], [Result], []),
+  'respondToModeratorApplication' : IDL.Func([IDL.Nat, IDL.Text], [Result], []),
+  'respondToModeratorReport' : IDL.Func([IDL.Nat, IDL.Text], [Result], []),
   'reviewAppeal' : IDL.Func(
       [UserId, IDL.Variant({ 'deny' : IDL.Null, 'approve' : IDL.Null })],
       [],
@@ -100,6 +140,14 @@ export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
   const UserId = IDL.Text;
+  const ApplicationResult = IDL.Variant({
+    'failure' : IDL.Record({
+      'removedFromQueue' : IDL.Bool,
+      'message' : IDL.Text,
+    }),
+    'hint' : IDL.Null,
+    'success' : IDL.Null,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -122,6 +170,7 @@ export const idlFactory = ({ IDL }) => {
     }),
     'warningCount' : IDL.Nat,
     'username' : IDL.Text,
+    'adminAppealResponse' : IDL.Opt(IDL.Text),
     'banReason' : IDL.Text,
     'banAppealStatus' : IDL.Variant({
       'pending' : IDL.Null,
@@ -130,8 +179,23 @@ export const idlFactory = ({ IDL }) => {
     }),
     'isBanned' : IDL.Bool,
     'banAppealText' : IDL.Text,
+    'maxWarnings' : IDL.Nat,
   });
   const UserProfile = IDL.Record({ 'username' : IDL.Text, 'name' : IDL.Text });
+  const ApplicationId = IDL.Text;
+  const ModeratorApplication = IDL.Record({
+    'id' : ApplicationId,
+    'status' : IDL.Variant({
+      'pending' : IDL.Null,
+      'denied' : IDL.Null,
+      'approved' : IDL.Null,
+    }),
+    'applicantPrincipal' : IDL.Principal,
+    'wasWarned' : IDL.Bool,
+    'timestamp' : IDL.Int,
+    'applicantUserId' : IDL.Opt(UserId),
+    'adminResponse' : IDL.Opt(IDL.Text),
+  });
   const ReportId = IDL.Text;
   const ModeratorReport = IDL.Record({
     'id' : ReportId,
@@ -139,6 +203,7 @@ export const idlFactory = ({ IDL }) => {
     'reportedModeratorId' : ModeratorId,
     'timestamp' : IDL.Int,
     'reportedByUserId' : UserId,
+    'adminResponse' : IDL.Opt(IDL.Text),
     'reason' : IDL.Text,
   });
   const WarningId = IDL.Text;
@@ -149,11 +214,17 @@ export const idlFactory = ({ IDL }) => {
     'reason' : IDL.Text,
     'targetUserId' : UserId,
   });
+  const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addModerator' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'addUser' : IDL.Func([UserId, IDL.Text], [], []),
+    'applyForModerator' : IDL.Func(
+        [IDL.Text, IDL.Opt(UserId)],
+        [ApplicationResult],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'banUser' : IDL.Func([UserId, IDL.Text], [], []),
@@ -161,6 +232,11 @@ export const idlFactory = ({ IDL }) => {
     'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getModeratorApplications' : IDL.Func(
+        [],
+        [IDL.Vec(ModeratorApplication)],
+        ['query'],
+      ),
     'getModeratorReports' : IDL.Func([], [IDL.Vec(ModeratorReport)], ['query']),
     'getMyAppealStatus' : IDL.Func([UserId], [IDL.Text], ['query']),
     'getUser' : IDL.Func([UserId], [IDL.Opt(User)], ['query']),
@@ -173,8 +249,16 @@ export const idlFactory = ({ IDL }) => {
     'instantBanUser' : IDL.Func([UserId], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'issueWarning' : IDL.Func([UserId, IDL.Text], [], []),
+    'recordSearchAttempt' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'reportModerator' : IDL.Func([ModeratorId, IDL.Text], [], []),
     'resolveModeratorReport' : IDL.Func([ReportId, IDL.Bool], [], []),
+    'respondToAppeal' : IDL.Func([IDL.Principal, IDL.Text], [Result], []),
+    'respondToModeratorApplication' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [Result],
+        [],
+      ),
+    'respondToModeratorReport' : IDL.Func([IDL.Nat, IDL.Text], [Result], []),
     'reviewAppeal' : IDL.Func(
         [UserId, IDL.Variant({ 'deny' : IDL.Null, 'approve' : IDL.Null })],
         [],

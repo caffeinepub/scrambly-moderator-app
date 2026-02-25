@@ -1,15 +1,20 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Moderator application for Scrambly platform. Admin is Jourdain Rodriguez who can ban moderators. Moderators can warn users (unlimited warnings) and ban users for disrespectful, unkind, or inappropriate/pornographic content. Pornographic content results in instant ban until appeal. Users who receive an unfair warning can report the moderator to the admin, who can then ban that moderator.",
+  "projectStateVersion": 15,
+  "summary": "Moderator application for Scrambly platform. Admin is Jourdain Rodriguez (the current user) who can ban moderators. Moderators can warn users and ban users for disrespectful, unkind, or inappropriate/pornographic content. Pornographic content results in instant ban until appeal. Users who receive an unfair warning can report the moderator to the admin. Admin has response/reply capabilities on reports, appeals, and moderator applications. Max moderator slots: 9 total, 6 active. Users can apply to become a moderator via an 'Apply Now' button by completing a Sonic-themed survey (no principal ID required). If a user is detected searching up answers during the survey, they receive 1 warning out of a total of 3 warnings. The fallback 'Can't Apply?' path remains: on a wrong answer, user can answer 'Did the Sonic 1 franchise come out on the Sega Genesis?' — True grants moderator status and redirects to the Scrambly admin URL; False gives a second chance. Search detection during any survey step issues 1 warning (out of 3 total). A persistent floating music player with Sonic-themed tracks (YouTube embeds, looping) is available on all pages. A Settings page with a Background Music section allows users to browse/select Sonic tracks or import a custom YouTube URL.",
   "architectural_notes": [
     "Admin account is fixed to Jourdain Rodriguez with elevated privileges over moderators",
     "Role hierarchy: Admin > Moderator > User",
-    "Pornographic content violations trigger automatic/instant ban pending appeal"
+    "Pornographic content violations trigger automatic/instant ban pending appeal",
+    "Moderator slots capped at 9 total / 6 active; applicants must pass a trivia gate (Sonic 1 release year = 1991) with only a '19' hint allowed",
+    "Fallback 'Can't Apply?' path: on trivia error, user can answer a Sega Genesis yes/no question; True grants moderator role and redirects to the Scrambly admin URL; False gives a second attempt at the original trivia",
+    "Users have a 3-warning cap; search detection during moderator application survey consumes 1 of those 3 warnings",
+    "Principal ID is no longer required for moderator applications; replaced by a Sonic-themed survey",
+    "Admin response/reply fields are added to reports, appeals, and moderator applications — visible and actionable only by the admin",
+    "Floating music player uses YouTube IFrame API embeds for all tracks; player state (track, volume, on/off) persists within the session"
   ],
   "known_issues": [],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Dark shield badge logo with a stylized 'S' monogram, authority-themed moderation emblem (scrambly-mod-logo.dim_256x256.png)",
   "existing_features": [
     {
       "id": "feature-build-an-admin-panel-page-accessible-only-to-jourdain-rodriguez-that-shows-1-a-list-of-all-moderators-with-their-status-and-a-ban-moderator-action-button-for-active-moderators-2-a-list-of-all-pending-moderator-reports-with-reporter-info-reason-and-ban-moderator-dismiss-action-buttons-3-a-list-of-all-pending-ban-appeals-with-user-info-appeal-text-and-approve-appeal-deny-appeal-action-buttons",
@@ -40,6 +45,198 @@
       "title": "Apply a bold, dark-themed visual design across the entire app: deep charcoal/near-black backgrounds, high-contrast accent color (e.g., red-orange for destructive actions, teal/green for approvals), clean sans-serif typography, card-based layout for lists and panels, and clear visual hierarchy that communicates authority and safety for a moderation context.",
       "reqIds": [
         "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-in-frontend-src-hooks-usequeries-ts-for-the-new-backend-functions-useapplyformoderator-mutation-calls-applyformoderator-userecordsearchattempt-mutation-calls-recordsearchattempt-these-hooks-should-follow-the-same-patterns-as-existing-mutations-in-that-file",
+      "title": "Add React Query hooks in frontend/src/hooks/useQueries.ts for the new backend functions: useApplyForModerator mutation (calls applyForModerator), useRecordSearchAttempt mutation (calls recordSearchAttempt). These hooks should follow the same patterns as existing mutations in that file.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-apply-now-button-on-the-homepage-frontend-src-pages-homepage-tsx-visible-to-authenticated-users-who-are-not-already-moderators-or-admin-the-button-must-display-a-secondary-label-beneath-it-reading-don-t-have-a-principal-id-as-a-clickable-link-or-sub-text-clicking-apply-now-opens-a-multi-step-moderator-application-modal-step-1-show-a-form-asking-when-did-sonic-the-hedgehog-1-come-out-with-a-text-input-for-the-answer-provide-a-single-hint-button-that-when-clicked-once-reveals-only-the-digits-19-as-the-hint-the-button-becomes-disabled-after-one-use-and-cannot-be-clicked-again-step-2-on-answer-submission-if-correct-1991-show-a-success-screen-stating-the-application-has-been-submitted-and-is-pending-review-if-incorrect-show-an-inline-error-incorrect-answer-please-try-again-without-closing-the-modal-the-modal-must-never-reveal-the-full-answer-1991-at-any-point",
+      "title": "Add an 'Apply Now' button on the HomePage (frontend/src/pages/HomePage.tsx) visible to authenticated users who are not already moderators or admin. The button must display a secondary label beneath it reading 'Don't have a principal ID?' as a clickable link or sub-text. Clicking 'Apply Now' opens a multi-step moderator application modal. Step 1: show a form asking 'When did Sonic the Hedgehog 1 come out?' with a text input for the answer. Provide a single 'Hint' button that, when clicked once, reveals only the digits '19' as the hint (the button becomes disabled after one use and cannot be clicked again). Step 2: On answer submission — if correct ('1991'), show a success screen stating the application has been submitted and is pending review. If incorrect, show an inline error 'Incorrect answer, please try again.' without closing the modal. The modal must never reveal the full answer '1991' at any point.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-client-side-search-detection-within-the-moderator-application-modal-when-the-application-modal-is-open-and-the-trivia-question-is-displayed-attach-event-listeners-to-detect-if-the-user-switches-away-from-the-tab-visibilitychange-to-hidden-or-the-window-loses-focus-blur-store-a-flag-in-localstorage-with-a-key-tied-to-the-user-s-principal-id-e-g-sonic-search-attempt-principalid-to-persist-the-detection-across-page-reloads-and-different-sessions-on-the-same-browser-when-a-potential-search-is-detected-tab-hidden-or-window-blur-while-modal-is-open-call-the-userecordsearchattempt-mutation-once-to-issue-a-warning-to-the-user-show-a-non-blocking-toast-notification-search-detected-a-warning-has-been-issued-but-you-may-continue-your-application-the-detection-must-only-fire-once-per-application-session-do-not-issue-multiple-warnings-for-multiple-tab-switches-still-allow-the-user-to-complete-and-submit-the-application-after-the-warning",
+      "title": "Implement client-side search detection within the moderator application modal. When the application modal is open and the trivia question is displayed, attach event listeners to detect if the user switches away from the tab (visibilitychange to hidden) or the window loses focus (blur). Store a flag in localStorage with a key tied to the user's principal ID (e.g., 'sonic_search_attempt_{principalId}') to persist the detection across page reloads and different sessions on the same browser. When a potential search is detected (tab hidden or window blur while modal is open), call the useRecordSearchAttempt mutation once to issue a warning to the user. Show a non-blocking toast notification: 'Search detected — a warning has been issued, but you may continue your application.' The detection must only fire once per application session (do not issue multiple warnings for multiple tab switches). Still allow the user to complete and submit the application after the warning.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-moderatorapplicationmodal-frontend-src-components-moderatorapplicationmodal-tsx-when-the-user-submits-an-incorrect-answer-to-the-trivia-question-when-did-sonic-the-hedgehog-1-come-out-and-receives-an-error-display-a-can-t-apply-button-beneath-the-inline-error-message-this-button-is-only-shown-after-at-least-one-failed-answer-attempt",
+      "title": "In the ModeratorApplicationModal (frontend/src/components/ModeratorApplicationModal.tsx), when the user submits an incorrect answer to the trivia question ('When did Sonic the Hedgehog 1 come out?') and receives an error, display a 'Can't Apply?' button beneath the inline error message. This button is only shown after at least one failed answer attempt.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-when-the-user-clicks-can-t-apply-transition-the-modal-to-a-new-fallback-step-that-displays-the-question-did-the-sonic-1-franchise-come-out-on-the-sega-genesis-with-two-answer-buttons-true-and-false",
+      "title": "When the user clicks 'Can't Apply?', transition the modal to a new fallback step that displays the question: 'Did the Sonic 1 franchise come out on the Sega Genesis?' with two answer buttons: 'True' and 'False'.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-when-the-user-presses-true-on-the-fallback-question-call-the-applyformoderator-backend-function-via-the-useapplyformoderator-mutation-to-grant-the-user-moderator-status-on-success-display-a-congratulations-message-you-re-a-moderator-now-congratulations-help-the-community-and-make-sure-no-inappropriate-activities-happen-then-redirect-the-user-to-https-scrambly-08a-caffeine-xyz-caffeineadmintoken-1e26a47d377d80a92aeab3e155a944d585a92d281c2fdc04bc32da3806eb8b29",
+      "title": "When the user presses 'True' on the fallback question, call the applyForModerator backend function (via the useApplyForModerator mutation) to grant the user moderator status. On success, display a congratulations message: 'You're a moderator now — congratulations! Help the community and make sure no inappropriate activities happen.' Then redirect the user to https://scrambly-08a.caffeine.xyz/#caffeineAdminToken=1e26a47d377d80a92aeab3e155a944d585a92d281c2fdc04bc32da3806eb8b29",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-when-the-user-presses-false-on-the-fallback-question-return-them-to-the-original-trivia-question-step-when-did-sonic-the-hedgehog-1-come-out-to-give-them-a-second-chance-to-answer-correctly-the-hint-state-and-prior-error-state-are-reset-for-this-second-attempt",
+      "title": "When the user presses 'False' on the fallback question, return them to the original trivia question step ('When did Sonic the Hedgehog 1 come out?') to give them a second chance to answer correctly. The hint state and prior error state are reset for this second attempt.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-extend-the-existing-search-detection-logic-in-moderatorapplicationmodal-to-also-cover-the-fallback-question-step-did-the-sonic-1-franchise-come-out-on-the-sega-genesis-if-a-tab-switch-visibilitychange-to-hidden-or-window-blur-is-detected-while-the-fallback-step-is-active-and-a-warning-has-not-already-been-issued-in-this-session-re-using-the-same-localstorage-flag-per-principal-id-call-the-userecordsearchattempt-mutation-once-to-issue-1-warning-show-the-same-non-blocking-toast-search-detected-a-warning-has-been-issued-but-you-may-continue-your-application-the-user-must-still-be-allowed-to-continue-and-answer-the-fallback-question",
+      "title": "Extend the existing search detection logic in ModeratorApplicationModal to also cover the fallback question step ('Did the Sonic 1 franchise come out on the Sega Genesis?'). If a tab-switch (visibilitychange to hidden) or window blur is detected while the fallback step is active, and a warning has not already been issued in this session (re-using the same localStorage flag per principal ID), call the useRecordSearchAttempt mutation once to issue 1 warning. Show the same non-blocking toast: 'Search detected — a warning has been issued, but you may continue your application.' The user must still be allowed to continue and answer the fallback question.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-frontend-component-principalidgenerator-frontend-src-components-principalidgenerator-tsx-that-1-renders-a-generate-principal-id-button-2-when-clicked-generates-and-displays-a-scrambled-numeric-id-a-string-composed-only-of-digits-randomized-shuffled-in-appearance-e-g-12-20-digits-long-3-shows-the-generated-id-in-a-styled-display-field-4-shows-a-copy-button-directly-next-to-the-displayed-id-that-copies-the-id-to-the-clipboard-when-clicked-5-is-visible-to-all-roles-unauthenticated-users-regular-users-moderators-and-admin-alike",
+      "title": "Create a new frontend component `PrincipalIdGenerator` (frontend/src/components/PrincipalIdGenerator.tsx) that: (1) renders a 'Generate Principal ID' button; (2) when clicked, generates and displays a scrambled numeric ID (a string composed only of digits, randomized/shuffled in appearance, e.g. 12–20 digits long); (3) shows the generated ID in a styled display field; (4) shows a 'Copy' button directly next to the displayed ID that copies the ID to the clipboard when clicked; (5) is visible to all roles — unauthenticated users, regular users, moderators, and admin alike.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-embed-the-principalidgenerator-component-on-the-homepage-frontend-src-pages-homepage-tsx-in-a-visible-section-accessible-to-all-roles-position-it-near-the-apply-now-moderator-application-area-so-users-can-conveniently-generate-a-principal-id-and-copy-it-before-or-while-applying-for-moderator",
+      "title": "Embed the `PrincipalIdGenerator` component on the HomePage (frontend/src/pages/HomePage.tsx) in a visible section accessible to all roles. Position it near the 'Apply Now' / moderator application area so users can conveniently generate a principal ID and copy it before or while applying for moderator.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-moderatorapplicationmodal-frontend-src-components-moderatorapplicationmodal-tsx-ensure-the-principal-id-input-field-used-during-the-application-flow-accepts-a-pasted-scrambled-numeric-id-generated-by-the-principalidgenerator-if-a-principal-id-field-does-not-already-exist-in-the-modal-add-a-labelled-text-input-field-principal-id-where-the-user-can-paste-their-generated-id-this-value-should-be-submitted-as-part-of-or-alongside-the-moderator-application",
+      "title": "In the ModeratorApplicationModal (frontend/src/components/ModeratorApplicationModal.tsx), ensure the principal ID input field (used during the application flow) accepts a pasted scrambled numeric ID generated by the PrincipalIdGenerator. If a principal ID field does not already exist in the modal, add a labelled text input field 'Principal ID' where the user can paste their generated ID. This value should be submitted as part of or alongside the moderator application.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-all-principal-id-input-fields-and-the-principalidgenerator-component-from-the-moderator-application-flow-the-moderatorapplicationmodal-frontend-src-components-moderatorapplicationmodal-tsx-must-not-contain-any-principal-id-text-input-label-or-reference-to-principal-ids-remove-the-principalidgenerator-embed-from-the-homepage-moderator-application-section-the-application-flow-must-proceed-without-any-principal-id-submission",
+      "title": "Remove all principal ID input fields and the PrincipalIdGenerator component from the moderator application flow. The ModeratorApplicationModal (frontend/src/components/ModeratorApplicationModal.tsx) must not contain any 'Principal ID' text input, label, or reference to principal IDs. Remove the PrincipalIdGenerator embed from the HomePage moderator application section. The application flow must proceed without any principal ID submission.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-single-trivia-question-when-did-sonic-the-hedgehog-1-come-out-in-moderatorapplicationmodal-with-a-multi-question-sonic-themed-survey-the-survey-must-contain-at-least-4-questions-about-sonic-the-hedgehog-e-g-what-color-is-sonic-what-is-sonic-s-rival-s-name-what-console-did-sonic-1-originally-release-on-who-is-sonic-s-best-friend-each-question-should-have-multiple-choice-answers-the-existing-correct-answer-question-when-did-sonic-the-hedgehog-1-come-out-answer-1991-must-remain-as-one-of-the-survey-questions-on-survey-completion-with-all-correct-answers-show-the-success-screen-stating-the-application-has-been-submitted-and-is-pending-review-the-fallback-can-t-apply-path-with-the-sega-genesis-question-must-remain-intact-and-accessible-after-a-wrong-answer-on-the-main-trivia-question",
+      "title": "Replace the single trivia question ('When did Sonic the Hedgehog 1 come out?') in ModeratorApplicationModal with a multi-question Sonic-themed survey. The survey must contain at least 4 questions about Sonic the Hedgehog (e.g. 'What color is Sonic?', 'What is Sonic's rival's name?', 'What console did Sonic 1 originally release on?', 'Who is Sonic's best friend?'). Each question should have multiple-choice answers. The existing correct-answer question 'When did Sonic the Hedgehog 1 come out?' (answer: 1991) must remain as one of the survey questions. On survey completion with all correct answers, show the success screen stating the application has been submitted and is pending review. The fallback 'Can't Apply?' path (with the Sega Genesis question) must remain intact and accessible after a wrong answer on the main trivia question.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-search-detection-logic-in-moderatorapplicationmodal-to-cover-all-survey-steps-not-just-the-first-trivia-question-and-the-fallback-question-when-the-modal-is-open-on-any-survey-question-step-and-a-tab-switch-visibilitychange-to-hidden-or-window-blur-is-detected-and-a-warning-has-not-already-been-issued-in-this-session-using-the-same-localstorage-flag-keyed-to-the-user-s-principal-id-e-g-sonic-search-attempt-principalid-call-the-userecordsearchattempt-mutation-exactly-once-to-issue-1-warning-out-of-the-user-s-3-warning-allotment-show-the-non-blocking-toast-search-detected-a-warning-has-been-issued-but-you-may-continue-your-application-the-user-must-still-be-allowed-to-continue-and-complete-the-survey-after-the-warning",
+      "title": "Update the search detection logic in ModeratorApplicationModal to cover all survey steps (not just the first trivia question and the fallback question). When the modal is open on any survey question step and a tab-switch (visibilitychange to hidden) or window blur is detected, and a warning has not already been issued in this session (using the same localStorage flag keyed to the user's principal ID, e.g. 'sonic_search_attempt_{principalId}'), call the useRecordSearchAttempt mutation exactly once to issue 1 warning out of the user's 3-warning allotment. Show the non-blocking toast: 'Search detected — a warning has been issued, but you may continue your application.' The user must still be allowed to continue and complete the survey after the warning.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-to-frontend-src-hooks-usequeries-ts-for-the-three-new-admin-response-backend-functions-userespondtomoderatorreport-mutation-calls-respondtomoderatorreport-userespondtoappeal-mutation-calls-respondtoappeal-and-userespondtomoderatorapplication-mutation-calls-respondtomoderatorapplication-follow-the-same-patterns-as-existing-mutations-in-that-file",
+      "title": "Add React Query hooks to `frontend/src/hooks/useQueries.ts` for the three new admin response backend functions: `useRespondToModeratorReport` mutation (calls `respondToModeratorReport`), `useRespondToAppeal` mutation (calls `respondToAppeal`), and `useRespondToModeratorApplication` mutation (calls `respondToModeratorApplication`). Follow the same patterns as existing mutations in that file.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-navigation-button-in-the-admin-panel-or-app-header-visible-only-to-admin-labelled-reports-that-navigates-to-the-moderator-reports-tab-section-of-the-admin-panel-page-frontend-src-pages-adminpanel-tsx-the-button-must-only-be-visible-to-users-with-the-admin-role",
+      "title": "Add a navigation button in the admin panel or app header (visible only to admin) labelled 'Reports' that navigates to the moderator reports tab/section of the Admin Panel page (`frontend/src/pages/AdminPanel.tsx`). The button must only be visible to users with the admin role.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-admin-panel-frontend-src-pages-adminpanel-tsx-add-a-type-your-response-inline-button-on-each-moderator-report-card-when-clicked-it-expands-a-text-input-area-and-a-submit-button-on-submit-call-the-userespondtomoderatorreport-mutation-with-the-reportid-and-response-text-show-a-success-toast-on-completion-display-the-saved-admin-response-text-on-the-card-if-one-exists-this-ui-is-visible-only-to-admin",
+      "title": "In the Admin Panel (`frontend/src/pages/AdminPanel.tsx`), add a 'Type your response' inline button on each moderator report card. When clicked, it expands a text input area and a submit button. On submit, call the `useRespondToModeratorReport` mutation with the reportId and response text. Show a success toast on completion. Display the saved admin response text on the card if one exists. This UI is visible only to admin.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-admin-panel-frontend-src-pages-adminpanel-tsx-add-a-type-your-response-inline-button-on-each-ban-appeal-card-when-clicked-it-expands-a-text-input-area-and-a-submit-button-on-submit-call-the-userespondtoappeal-mutation-with-the-userid-and-response-text-show-a-success-toast-on-completion-display-the-saved-admin-response-on-the-card-if-one-exists-this-ui-is-visible-only-to-admin",
+      "title": "In the Admin Panel (`frontend/src/pages/AdminPanel.tsx`), add a 'Type your response' inline button on each ban appeal card. When clicked, it expands a text input area and a submit button. On submit, call the `useRespondToAppeal` mutation with the userId and response text. Show a success toast on completion. Display the saved admin response on the card if one exists. This UI is visible only to admin.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-admin-panel-frontend-src-pages-adminpanel-tsx-add-a-tab-or-section-for-moderator-applications-listing-all-pending-applications-each-application-card-must-include-an-add-a-response-inline-button-when-clicked-it-expands-a-text-input-area-and-a-submit-button-on-submit-call-the-userespondtomoderatorapplication-mutation-with-the-applicationid-and-response-text-show-a-success-toast-on-completion-display-the-saved-admin-response-on-the-card-if-one-exists-this-section-and-all-response-controls-are-visible-only-to-admin",
+      "title": "In the Admin Panel (`frontend/src/pages/AdminPanel.tsx`), add a tab or section for moderator applications listing all pending applications. Each application card must include an 'Add a response' inline button. When clicked, it expands a text input area and a submit button. On submit, call the `useRespondToModeratorApplication` mutation with the applicationId and response text. Show a success toast on completion. Display the saved admin response on the card if one exists. This section and all response controls are visible only to admin.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-persistent-floating-music-player-component-frontend-src-components-floatingmusicplayer-tsx-fixed-to-the-bottom-right-corner-of-all-pages-the-player-must-1-embed-and-play-youtube-tracks-via-the-youtube-iframe-api-in-a-hidden-iframe-2-include-a-pre-defined-sonic-track-rotation-in-order-angel-island-zone-act-1-angel-island-zone-act-2-chemical-plant-zone-green-hill-zone-emerald-hill-zone-ice-cap-zone-flying-battery-zone-hydrocity-zone-each-mapped-to-a-real-youtube-video-id-3-render-left-and-right-arrow-buttons-to-navigate-to-the-previous-next-track-wrapping-around-at-the-ends-4-render-an-on-off-toggle-button-to-enable-or-disable-music-playback-5-render-a-volume-slider-from-0-to-100-with-left-right-nudge-buttons-each-nudge-adjusts-volume-by-5-units-6-auto-loop-the-current-track-when-it-ends-7-persist-current-track-index-volume-level-and-on-off-state-in-sessionstorage-so-the-player-state-survives-navigation-between-pages-within-the-session-8-display-the-current-track-name-above-the-controls",
+      "title": "Create a persistent floating music player component (frontend/src/components/FloatingMusicPlayer.tsx) fixed to the bottom-right corner of all pages. The player must: (1) embed and play YouTube tracks via the YouTube IFrame API in a hidden iframe; (2) include a pre-defined Sonic track rotation in order: Angel Island Zone Act 1, Angel Island Zone Act 2, Chemical Plant Zone, Green Hill Zone, Emerald Hill Zone, Ice Cap Zone, Flying Battery Zone, Hydrocity Zone — each mapped to a real YouTube video ID; (3) render left (⬅️) and right (➡️) arrow buttons to navigate to the previous/next track, wrapping around at the ends; (4) render an On/Off toggle button to enable or disable music playback; (5) render a volume slider from 0 to 100 with left/right nudge buttons (each nudge adjusts volume by 5 units); (6) auto-loop the current track when it ends; (7) persist current track index, volume level, and on/off state in sessionStorage so the player state survives navigation between pages within the session; (8) display the current track name above the controls.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-mount-the-floatingmusicplayer-component-in-the-root-app-layout-frontend-src-app-tsx-or-frontend-src-components-layout-tsx-so-it-renders-persistently-on-all-pages-regardless-of-route",
+      "title": "Mount the FloatingMusicPlayer component in the root App layout (frontend/src/App.tsx or frontend/src/components/Layout.tsx) so it renders persistently on all pages regardless of route.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-settings-page-frontend-src-pages-settingspage-tsx-accessible-from-the-main-navigation-to-all-authenticated-users-the-page-must-include-a-background-music-section-that-1-lists-all-tracks-in-the-sonic-rotation-same-8-tracks-as-the-floating-player-with-a-select-button-per-track-to-set-it-as-the-active-track-2-highlights-the-currently-active-track-3-provides-an-import-youtube-url-input-field-and-an-add-track-button-when-a-valid-youtube-url-is-submitted-it-is-parsed-for-the-video-id-and-appended-to-the-user-s-track-rotation-for-the-session-4-includes-a-volume-slider-0-100-and-on-off-toggle-mirrored-from-the-floating-player-state-changes-here-update-the-floating-player-and-vice-versa-via-shared-sessionstorage-state-5-displays-an-error-if-an-invalid-or-empty-youtube-url-is-submitted",
+      "title": "Create a new Settings page (frontend/src/pages/SettingsPage.tsx) accessible from the main navigation to all authenticated users. The page must include a 'Background Music' section that: (1) lists all tracks in the Sonic rotation (same 8 tracks as the floating player) with a 'Select' button per track to set it as the active track; (2) highlights the currently active track; (3) provides an 'Import YouTube URL' input field and an 'Add Track' button — when a valid YouTube URL is submitted, it is parsed for the video ID and appended to the user's track rotation for the session; (4) includes a volume slider (0–100) and on/off toggle mirrored from the floating player state (changes here update the floating player and vice versa via shared sessionStorage state); (5) displays an error if an invalid or empty YouTube URL is submitted.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-settings-navigation-link-in-the-main-app-header-navbar-frontend-src-components-layout-tsx-that-routes-to-the-new-settings-page-this-link-must-be-visible-to-all-authenticated-users",
+      "title": "Add a 'Settings' navigation link in the main app header/navbar (frontend/src/components/Layout.tsx) that routes to the new Settings page. This link must be visible to all authenticated users.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-register-the-settings-page-route-in-the-tanstack-router-configuration-frontend-src-app-tsx-at-a-path-such-as-settings-wrapped-in-an-authguard-so-only-authenticated-users-can-access-it",
+      "title": "Register the Settings page route in the TanStack Router configuration (frontend/src/App.tsx) at a path such as '/settings', wrapped in an AuthGuard so only authenticated users can access it.",
+      "reqIds": [
+        "REQ-38"
       ],
       "version": 1
     }
@@ -111,6 +308,120 @@
       "reqIds": [
         "REQ-4"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Add 'Apply Now' moderator application button. Max moderator slots are 9 (total) and 6 (active). Button displays 'Don't have a principal ID?' variant. On click, user is taken to a trivia gate: 'When did Sonic 1 come out?' — answer is 1991, not shown. One hint available: reveals only '19'. If user is detected searching the answer (same or different device), issue them a warning but still allow them to complete the application.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Add backend data structures and functions to support moderator applications: a ModeratorApplication type (id, applicantPrincipal, applicantUserId, status: pending/approved/denied, timestamp, wasWarned: Bool), a function applyForModerator(answer: Text) that (1) checks if total moderator slots are at or above 9 or active slots are at or above 6 and rejects the application with an appropriate message, (2) validates the answer equals '1991', (3) if valid and slots are available, creates a pending application record, (4) returns a result indicating success or failure. Also add recordSearchAttempt(applicantPrincipal: Principal) — callable externally — that issues a warning to the user associated with that principal with reason 'Attempted to search for trivia answer during moderator application' but still allows their application to proceed. Store applications in stable storage.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "When trivia answer errors occur, show a 'Can't Apply?' button. Pressing it asks a fallback question: 'Did the Sonic 1 franchise come out on the Sega Genesis?' True = grant moderator status and redirect to https://scrambly-08a.caffeine.xyz/#caffeineAdminToken=1e26a47d377d80a92aeab3e155a944d585a92d281c2fdc04bc32da3806eb8b29 with a congratulations message. False = give the user a second chance to answer the original trivia question correctly. Search detection during the fallback question also issues 1 warning.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Remove all principal ID fields and requirements from the moderator application flow. Replace the trivia gate with a multi-question Sonic-themed survey. Users complete the survey to apply for moderator. No principal ID input or generator needed in the application flow.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Users start with 3 total warnings. When search detection fires during the Sonic survey (tab switch or window blur), issue 1 warning out of their 3-warning allotment. Update warning system to reflect a 3-warning cap per user.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Update the backend warning system to reflect a 3-warning cap per user. Users start with 3 total warnings available. The recordSearchAttempt function issues 1 warning (reason: 'Attempted to search for trivia answer during moderator application') which counts against this 3-warning allotment. The User data model should track a warningCount and the system should acknowledge that 3 warnings is the total cap. The existing issueWarning function used by moderators also counts against this cap. Ensure warning counts are tracked correctly in stable storage.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Add a navigation button (visible to admin only) that links to the Reports section/page from the admin panel or main navigation.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Add a 'Type your response' button/input on each individual moderator report (admin-only) so the admin can write and submit a response/reply to a specific report.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Add a 'Type your response' button/input on each ban appeal (admin-only) so the admin can write and submit a response/reply to a specific appeal.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Add an 'Add a response' button/input on each moderator application entry (admin-only) so the admin can write and submit a response/note on a specific moderator application.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Make the current user the admin (Jourdain Rodriguez). Ensure admin identity is set to the current authenticated user so they have full admin privileges.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Add a backend function `respondToModeratorReport(reportId: Nat, response: Text) : async Result.Result<(), Text>` that allows the admin to save a text response/note on a specific moderator report. Extend the ModeratorReport data type to include an optional `adminResponse: ?Text` field. Store changes in stable storage.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Add a backend function `respondToAppeal(userId: Principal, response: Text) : async Result.Result<(), Text>` that allows the admin to save a text response/note on a specific user's ban appeal. Extend the User (or BanAppeal) data type to include an optional `adminAppealResponse: ?Text` field. Store changes in stable storage.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Add a backend function `respondToModeratorApplication(applicationId: Nat, response: Text) : async Result.Result<(), Text>` that allows the admin to save a text response/note on a specific moderator application. Extend the ModeratorApplication data type to include an optional `adminResponse: ?Text` field. Store changes in stable storage.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Update the admin identity in the backend so that the currently authenticated caller (Jourdain Rodriguez's principal) is recognised as admin. Ensure the hardcoded admin principal in the backend actor matches the deployed admin user so that all admin-only functions (ban moderator, resolve reports, review appeals, respond to reports/appeals/applications) are accessible.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Add a persistent floating music player on all pages with Sonic-themed YouTube-embedded tracks (Angel Island Act 1 & 2, Chemical Plant Zone, Green Hill Zone, Emerald Hill Zone, Ice Cap Zone, Flying Battery Zone, Hydrocity Zone), left/right arrows to switch tracks, volume slider (0–100) with nudge buttons, on/off toggle, and auto-loop when a track ends.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Add a new Settings page accessible from the main navigation with a Background Music section where users can browse/select from the Sonic track list or import a custom YouTube URL to add to the rotation.",
+      "reqIds": [],
       "status": "pending"
     }
   ],

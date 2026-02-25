@@ -1,21 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** Build the Scrambly Mod Hub — a moderation platform with three distinct roles (Admin, Moderator, User) featuring a full moderation workflow including warnings, bans, ban appeals, and moderator reporting.
+**Goal:** Add a persistent floating background music player and a Settings page with music controls to the Scrambly Moderator app.
 
 **Planned changes:**
+- Create a `FloatingMusicPlayer` component fixed to the bottom-right corner of all pages, using the YouTube IFrame API to play a pre-defined rotation of 8 Sonic tracks (Angel Island Zone Act 1, Act 2, Chemical Plant Zone, Green Hill Zone, Emerald Hill Zone, Ice Cap Zone, Flying Battery Zone, Hydrocity Zone)
+- Player includes left/right arrow buttons to cycle tracks, an On/Off toggle, a volume slider (0–100) with nudge buttons (±5), auto-loop, current track name display, and state persistence via sessionStorage
+- Mount `FloatingMusicPlayer` in the root app layout so it renders on every route without resetting on navigation
+- Create a new `SettingsPage` at `/settings` (auth-guarded) with a Background Music section listing all 8 tracks with Select buttons, track highlighting, a YouTube URL import field to add custom tracks for the session, a volume slider, and an On/Off toggle synced with the floating player via sessionStorage
+- Add a "Settings" navigation link in the main navbar, visible only to authenticated users, routing to `/settings`
+- Register the `/settings` route in the TanStack Router configuration with an AuthGuard
 
-### Backend
-- Define stable data entities: User, Moderator, Warning, ModeratorReport with all specified fields
-- Hardcode admin identity to "Jourdain Rodriguez"
-- Implement moderator actions: `issueWarning(userId, reason)`, `banUser(userId, reason)`, `instantBanUser(userId)` — restricted to active (non-banned) moderators
-- Implement ban appeal system: `submitAppeal(userId, appealText)`, `reviewAppeal(userId, decision)` (admin-only), `getMyAppealStatus(userId)`
-- Implement moderator reporting: `reportModerator(moderatorId, reason)` (only users with ≥1 warning), `getModeratorReports()` (admin-only), `resolveModeratorReport(reportId, banModerator)` (admin-only)
-
-### Frontend
-- **Admin Panel** (Jourdain Rodriguez only): sections for managing moderators (list + ban button), pending moderator reports (ban/dismiss actions), and pending ban appeals (approve/deny actions)
-- **Moderator Dashboard** (active moderators only): searchable user list with status/warning count, per-user inline forms for Issue Warning, Ban User, and one-click Instant Ban for pornographic content; all actions disabled with suspension notice if moderator is banned
-- **User Status Page**: displays ban status and reason, ban appeal form (if banned and no pending appeal), appeal status display, warning history list, and moderator report form (visible if user has ≥1 warning)
-- **Visual design**: dark charcoal theme, red-orange for destructive actions, teal/green for approvals, card-based layout, clean sans-serif typography
-
-**User-visible outcome:** Moderators can warn and ban users (including instant bans for pornographic content) via a dashboard. Banned users can submit appeals reviewed by the admin. Users with warnings can report moderators to the admin. The admin (Jourdain Rodriguez) has a dedicated panel to manage moderators, resolve reports, and handle appeals.
+**User-visible outcome:** Authenticated users hear background Sonic music that persists across all pages, can switch tracks and adjust volume from the floating player or the new Settings page, and can add custom YouTube tracks for their session.

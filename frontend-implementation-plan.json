@@ -1,121 +1,101 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Scrambly Moderation Platform — Moderator & Admin Dashboard (Frontend)",
+  "title": "Add Persistent Floating Music Player and Settings Page with Background Music",
   "requirements": [
     {
-      "id": "REQ-5",
-      "summary": "Build an admin panel page accessible only to Jourdain Rodriguez showing moderators, pending reports, and pending appeals with action buttons",
+      "id": "REQ-34",
+      "summary": "Create a persistent floating music player component that plays YouTube tracks via YouTube IFrame API, supports track navigation, volume control, on/off toggle, auto-loop, and persists state in sessionStorage",
       "acceptanceCriteria": [
-        "Admin panel is only visible/accessible when logged in as Jourdain Rodriguez.",
-        "All three sections are visible in the admin panel with live data from the backend.",
-        "Clicking 'Ban Moderator' calls the resolveModeratorReport or direct ban function and updates the UI.",
-        "Approve/Deny buttons on appeals call the reviewAppeal function and refresh the list."
+        "Floating player is visible and accessible on every page of the app",
+        "Player is fixed to the bottom-right corner and does not obstruct main content",
+        "Right arrow advances to the next track; left arrow goes to the previous track",
+        "Track wraps from last to first and first to last when cycling",
+        "On/Off toggle starts and stops playback",
+        "Volume slider ranges from 0 (muted) to 100 (full volume)",
+        "Left and right nudge buttons adjust volume by 5 units per click",
+        "Track auto-loops when it reaches the end",
+        "Current track name is displayed in the player UI",
+        "Player state (track index, volume, on/off) is restored from sessionStorage after navigating between pages"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminPanel.tsx",
+          "path": "frontend/src/components/FloatingMusicPlayer.tsx",
           "operation": "create",
-          "description": "Create admin panel page that displays three sections: (1) list of all moderators with status and 'Ban Moderator' button for active moderators, calling backend functions to ban; (2) list of pending moderator reports with 'Ban Moderator' and 'Dismiss' buttons calling resolveModeratorReport; (3) list of pending ban appeals with 'Approve' and 'Deny' buttons calling reviewAppeal. Use the authorization component to verify admin access. Include real-time data fetching and UI updates after actions. Wire the generated logo image from frontend/public/assets/generated/scrambly-mod-logo.dim_256x256.png."
+          "description": "Create a React component that embeds a hidden YouTube IFrame player using the YouTube IFrame API. The component manages an array of 8 Sonic tracks (Angel Island Zone Act 1, Angel Island Zone Act 2, Chemical Plant Zone, Green Hill Zone, Emerald Hill Zone, Ice Cap Zone, Flying Battery Zone, Hydrocity Zone), each mapped to a real YouTube video ID. Render UI controls: left/right arrow buttons for previous/next track (with wrapping), an On/Off toggle button, a volume slider (0-100), and left/right nudge buttons that adjust volume by 5 units. Display the current track name. Implement auto-loop on track end. Use sessionStorage to persist and restore current track index, volume level, and on/off state across navigation. Apply fixed positioning to the bottom-right corner with appropriate z-index and styling that does not obstruct critical UI elements."
         },
         {
-          "path": "frontend/src/hooks/useAdminData.ts",
+          "path": "frontend/src/hooks/useMusicPlayer.ts",
           "operation": "create",
-          "description": "Create React Query hooks for fetching admin data: useGetAllModerators, useGetModeratorReports, useGetPendingAppeals (filter users with pending appeal status). Include mutations for banning moderators, resolving reports, and reviewing appeals with automatic query invalidation on success."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route registration for /admin mapping to AdminPanel page. Add admin-only navigation link that checks if the current user is admin using isCallerAdmin before displaying."
+          "description": "Create a custom React hook that encapsulates the YouTube IFrame API integration and music player state management. Export functions to initialize the YouTube player, load tracks by video ID, control playback (play/pause), navigate tracks (next/previous with wrapping), adjust volume, and sync state with sessionStorage. Return the current track index, track name, volume, isPlaying state, and control functions. This hook will be consumed by both FloatingMusicPlayer and SettingsPage to ensure shared state."
         }
       ]
     },
     {
-      "id": "REQ-6",
-      "summary": "Build a moderator dashboard page accessible only to active, non-banned moderators showing searchable user list with moderation actions",
+      "id": "REQ-35",
+      "summary": "Mount the FloatingMusicPlayer component in the root App layout so it renders persistently on all pages",
       "acceptanceCriteria": [
-        "Moderator dashboard is only visible to authenticated moderators.",
-        "User list updates in real time after any moderation action.",
-        "Issue Warning opens an inline form for a reason, then submits.",
-        "Ban User opens an inline form for a reason, then submits.",
-        "Instant Ban button immediately fires instantBanUser without additional input.",
-        "If moderator is banned, all action buttons are disabled with a 'Your account has been suspended' notice."
+        "FloatingMusicPlayer is rendered on every route including HomePage, AdminPanel, ModeratorDashboard, UserStatus, and any Settings page",
+        "Player does not unmount or reset when the user navigates between pages"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/ModeratorDashboard.tsx",
-          "operation": "create",
-          "description": "Create moderator dashboard page with searchable/filterable user list showing status, warning count, and per-user action buttons: 'Issue Warning' (inline reason input), 'Ban User' (inline reason input), 'Instant Ban for Pornographic Content' (one-click). Use authorization component to verify moderator access. Check moderator status and disable all actions with a notice if the moderator is banned. Use backend functions issueWarning, banUser, instantBanUser. Include real-time list updates after actions."
-        },
-        {
-          "path": "frontend/src/hooks/useModeratorData.ts",
-          "operation": "create",
-          "description": "Create React Query hooks for moderator operations: useGetAllUsers for fetching the user list, and mutations for issueWarning, banUser, and instantBanUser with automatic query invalidation. Include a hook to check the current moderator's status from the backend."
-        },
-        {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Add route registration for /moderator mapping to ModeratorDashboard page. Add moderator-only navigation link visible to users with moderator role."
+          "description": "Import FloatingMusicPlayer and render it as a persistent component within the RouterProvider structure, outside the route-specific content so it remains mounted across all route changes. Place it after the Toaster component to ensure it is always visible on every page."
         }
       ]
     },
     {
-      "id": "REQ-7",
-      "summary": "Build a user-facing status page showing ban status, appeal submission, appeal status, warnings history, and moderator reporting",
+      "id": "REQ-36",
+      "summary": "Create a new Settings page with a Background Music section that lists all tracks, allows track selection, supports importing YouTube URLs to add custom tracks, and mirrors the floating player's volume and on/off state",
       "acceptanceCriteria": [
-        "Banned users see a clear 'You are banned' notice with the reason.",
-        "Appeal form is shown only when user is banned and has no pending appeal.",
-        "Appeal status ('Pending review', 'Approved', 'Denied') is shown when an appeal exists.",
-        "Warning history shows each warning's reason and date.",
-        "'Report a Moderator' section is visible only if user has at least one warning and allows selecting which moderator to report with a reason."
+        "Settings page is linked from the main navigation and accessible to all authenticated users",
+        "Background Music section lists all 8 Sonic tracks with individual Select buttons",
+        "Currently active track is visually highlighted",
+        "Selecting a track from the list switches the floating player to that track",
+        "YouTube URL input field accepts a pasted URL; clicking 'Add Track' appends the track to the rotation",
+        "Invalid or empty URL submissions show an inline error message",
+        "Volume slider and on/off toggle on the Settings page reflect and update the floating player state",
+        "Changes made on the Settings page are immediately reflected in the floating player"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/UserStatus.tsx",
+          "path": "frontend/src/pages/SettingsPage.tsx",
           "operation": "create",
-          "description": "Create user status page that displays: (1) ban notice with reason if user is banned; (2) appeal submission form (textarea + submit) shown only if banned and no pending appeal; (3) current appeal status display; (4) list of received warnings with reason, timestamp, and issuing moderator; (5) 'Report a Moderator' section with moderator selector and reason field, visible only if user has at least one warning. Use backend functions getUser, submitAppeal, getMyAppealStatus, getUserWarnings, and reportModerator. Use authorization component to ensure user is authenticated."
-        },
-        {
-          "path": "frontend/src/hooks/useUserStatus.ts",
-          "operation": "create",
-          "description": "Create React Query hooks for user status operations: useGetCurrentUser (fetch user data by userId), useGetUserWarnings, useGetAppealStatus, and mutations for submitAppeal and reportModerator with automatic query invalidation."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route registration for /status mapping to UserStatus page. Add user-facing navigation link visible to all authenticated users."
+          "description": "Create a new Settings page component that renders a 'Background Music' section. List all 8 Sonic tracks from the rotation with a 'Select' button for each track. Highlight the currently active track visually. Provide an input field for pasting YouTube URLs and an 'Add Track' button that parses the URL for the video ID and appends it to the track rotation in sessionStorage. Display an error message for invalid or empty URLs. Include a volume slider (0-100) and an on/off toggle that consume and update the shared useMusicPlayer hook state. Ensure all changes immediately reflect in the FloatingMusicPlayer via shared sessionStorage state."
         }
       ]
     },
     {
-      "id": "REQ-8",
-      "summary": "Apply a bold, dark-themed visual design across the entire app with deep charcoal backgrounds, high-contrast accent colors, clean typography, and card-based layouts",
+      "id": "REQ-37",
+      "summary": "Add a 'Settings' navigation link in the main app header/navbar visible to all authenticated users",
       "acceptanceCriteria": [
-        "All pages share a consistent color palette and typography.",
-        "Destructive actions (ban, instant ban) use a red or red-orange color.",
-        "Positive actions (approve appeal, dismiss report) use a teal or green color.",
-        "Layout is clean, card-based, and usable on desktop screens."
+        "A 'Settings' link appears in the main navigation for all authenticated users",
+        "Clicking the link navigates to the Settings page",
+        "The Settings link is not shown to unauthenticated users"
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Update global styles to implement dark theme: set deep charcoal/near-black backgrounds (#0f0f0f, #1a1a1a), high-contrast text colors (white, light gray), define CSS variables for accent colors (red-orange for destructive actions like --color-destructive, teal/green for positive actions like --color-positive), and apply clean sans-serif font stack. Ensure card-based layout styling with subtle borders and shadows."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Extend Tailwind theme to include custom dark palette colors: charcoal backgrounds, red-orange destructive accent, teal/green positive accent. Add custom spacing and typography settings for authority-themed design. Configure card component styling with borders and shadows."
-        },
         {
           "path": "frontend/src/components/Layout.tsx",
-          "operation": "create",
-          "description": "Create a Layout component that wraps all pages with consistent navigation, header with the generated logo from frontend/public/assets/generated/scrambly-mod-logo.dim_256x256.png, and footer. Apply dark theme styling and ensure navigation links are role-aware (admin, moderator, user). Use authorization component to determine which links to display based on user role."
-        },
+          "operation": "modify",
+          "description": "Add a 'Settings' navigation link in the header navigation bar. Use the existing isAuthenticated state from useInternetIdentity to conditionally render the link only for authenticated users. The link should navigate to the /settings route."
+        }
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "summary": "Register the Settings page route in the TanStack Router configuration at /settings, wrapped in an AuthGuard",
+      "acceptanceCriteria": [
+        "Navigating to /settings renders the SettingsPage component",
+        "Unauthenticated users are redirected away from /settings by the AuthGuard",
+        "The route is included in the TanStack Router tree"
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Wrap all routes with the Layout component to ensure consistent dark-themed styling and navigation across all pages."
+          "description": "Import SettingsPage and register a new route at path '/settings' in the TanStack Router configuration. Wrap the SettingsPage component with the existing AuthGuard to ensure only authenticated users can access it. Add the route to the router tree alongside existing routes like '/admin', '/moderator', and '/user'."
         }
       ]
     }

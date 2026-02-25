@@ -10,6 +10,12 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type ApplicationId = string;
+export type ApplicationResult = {
+    'failure' : { 'removedFromQueue' : boolean, 'message' : string }
+  } |
+  { 'hint' : null } |
+  { 'success' : null };
 export interface Moderator {
   'id' : ModeratorId,
   'status' : { 'active' : null } |
@@ -17,6 +23,17 @@ export interface Moderator {
   'principal' : Principal,
   'name' : string,
   'banReason' : string,
+}
+export interface ModeratorApplication {
+  'id' : ApplicationId,
+  'status' : { 'pending' : null } |
+    { 'denied' : null } |
+    { 'approved' : null },
+  'applicantPrincipal' : Principal,
+  'wasWarned' : boolean,
+  'timestamp' : bigint,
+  'applicantUserId' : [] | [UserId],
+  'adminResponse' : [] | [string],
 }
 export type ModeratorId = string;
 export interface ModeratorReport {
@@ -26,9 +43,12 @@ export interface ModeratorReport {
   'reportedModeratorId' : ModeratorId,
   'timestamp' : bigint,
   'reportedByUserId' : UserId,
+  'adminResponse' : [] | [string],
   'reason' : string,
 }
 export type ReportId = string;
+export type Result = { 'ok' : null } |
+  { 'err' : string };
 export interface User {
   'id' : UserId,
   'status' : { 'active' : null } |
@@ -36,12 +56,14 @@ export interface User {
     { 'warned' : null },
   'warningCount' : bigint,
   'username' : string,
+  'adminAppealResponse' : [] | [string],
   'banReason' : string,
   'banAppealStatus' : { 'pending' : null } |
     { 'none' : null } |
     { 'reviewed' : null },
   'isBanned' : boolean,
   'banAppealText' : string,
+  'maxWarnings' : bigint,
 }
 export type UserId = string;
 export interface UserProfile { 'username' : string, 'name' : string }
@@ -60,6 +82,7 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addModerator' : ActorMethod<[Principal, string], undefined>,
   'addUser' : ActorMethod<[UserId, string], undefined>,
+  'applyForModerator' : ActorMethod<[string, [] | [UserId]], ApplicationResult>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignRole' : ActorMethod<[Principal, UserRole], undefined>,
   'banUser' : ActorMethod<[UserId, string], undefined>,
@@ -67,6 +90,7 @@ export interface _SERVICE {
   'getAllUsers' : ActorMethod<[], Array<User>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getModeratorApplications' : ActorMethod<[], Array<ModeratorApplication>>,
   'getModeratorReports' : ActorMethod<[], Array<ModeratorReport>>,
   'getMyAppealStatus' : ActorMethod<[UserId], string>,
   'getUser' : ActorMethod<[UserId], [] | [User]>,
@@ -75,8 +99,12 @@ export interface _SERVICE {
   'instantBanUser' : ActorMethod<[UserId], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'issueWarning' : ActorMethod<[UserId, string], undefined>,
+  'recordSearchAttempt' : ActorMethod<[Principal], boolean>,
   'reportModerator' : ActorMethod<[ModeratorId, string], undefined>,
   'resolveModeratorReport' : ActorMethod<[ReportId, boolean], undefined>,
+  'respondToAppeal' : ActorMethod<[Principal, string], Result>,
+  'respondToModeratorApplication' : ActorMethod<[bigint, string], Result>,
+  'respondToModeratorReport' : ActorMethod<[bigint, string], Result>,
   'reviewAppeal' : ActorMethod<
     [UserId, { 'deny' : null } | { 'approve' : null }],
     undefined

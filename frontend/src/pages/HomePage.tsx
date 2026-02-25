@@ -1,16 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Shield, Users, AlertTriangle, CheckCircle, LogIn, Loader2 } from 'lucide-react';
+import { Shield, Users, AlertTriangle, CheckCircle, LogIn, Loader2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useIsCallerAdmin } from '../hooks/useQueries';
+import { useIsCallerAdmin, useGetCallerUserRole, UserRole } from '../hooks/useQueries';
+import ModeratorApplicationModal from '../components/ModeratorApplicationModal';
 
 export default function HomePage() {
   const { identity, login, loginStatus } = useInternetIdentity();
   const isAuthenticated = !!identity;
   const isLoggingIn = loginStatus === 'logging-in';
   const { data: isAdmin } = useIsCallerAdmin();
+  const { data: userRole } = useGetCallerUserRole();
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+
+  // Show Apply Now only for authenticated non-admin regular users
+  const isRegularUser = isAuthenticated && !isAdmin && userRole === UserRole.user;
 
   const features = [
     {
@@ -85,30 +91,47 @@ export default function HomePage() {
             {isLoggingIn ? 'Logging in...' : 'Login to Continue'}
           </Button>
         ) : (
-          <div className="flex flex-wrap justify-center gap-3">
-            {isAdmin && (
-              <Button asChild size="lg" className="gap-2">
-                <Link to="/admin">
-                  <Shield className="w-5 h-5" />
-                  Admin Panel
-                </Link>
-              </Button>
-            )}
-            {!isAdmin && (
-              <>
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-wrap justify-center gap-3">
+              {isAdmin && (
                 <Button asChild size="lg" className="gap-2">
-                  <Link to="/moderator">
+                  <Link to="/admin">
                     <Shield className="w-5 h-5" />
-                    Mod Dashboard
+                    Admin Panel
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="gap-2">
-                  <Link to="/status">
-                    <Users className="w-5 h-5" />
-                    My Status
-                  </Link>
+              )}
+              {!isAdmin && (
+                <>
+                  <Button asChild size="lg" className="gap-2">
+                    <Link to="/moderator">
+                      <Shield className="w-5 h-5" />
+                      Mod Dashboard
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="gap-2">
+                    <Link to="/status">
+                      <Users className="w-5 h-5" />
+                      My Status
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Apply Now section — only for regular users */}
+            {isRegularUser && (
+              <div className="flex flex-col items-center gap-2 mt-2">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="gap-2 px-8 border border-primary/30 hover:border-primary/60 transition-colors"
+                  onClick={() => setApplyModalOpen(true)}
+                >
+                  <UserPlus className="w-5 h-5" />
+                  Apply Now
                 </Button>
-              </>
+              </div>
             )}
           </div>
         )}
@@ -150,6 +173,12 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Moderator Application Modal */}
+      <ModeratorApplicationModal
+        open={applyModalOpen}
+        onOpenChange={setApplyModalOpen}
+      />
     </div>
   );
 }

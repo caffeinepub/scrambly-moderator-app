@@ -17,11 +17,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import {
-  useGetCurrentUser,
+  useGetUser,
   useGetUserWarnings,
   useSubmitAppeal,
   useReportModerator,
@@ -33,7 +32,7 @@ export default function UserStatus() {
   const { identity } = useInternetIdentity();
   const userId = identity?.getPrincipal().toString() ?? null;
 
-  const { data: user, isLoading: userLoading, refetch: refetchUser } = useGetCurrentUser(userId);
+  const { data: user, isLoading: userLoading, refetch: refetchUser } = useGetUser(userId);
   const { data: warnings = [], isLoading: warningsLoading } = useGetUserWarnings(userId);
   const { data: moderators = [] } = useGetAllModerators();
 
@@ -179,7 +178,7 @@ export default function UserStatus() {
 
           {user.isBanned && user.banReason && (
             <Alert variant="destructive" className="border-destructive/40">
-              <Ban className="w-4 h-4" />
+              <XCircle className="w-4 h-4" />
               <AlertDescription>
                 <strong>Ban Reason:</strong> {user.banReason}
               </AlertDescription>
@@ -196,6 +195,14 @@ export default function UserStatus() {
                   <p className="text-xs text-muted-foreground">Your appeal has been reviewed by the admin.</p>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Admin Appeal Response */}
+          {user.adminAppealResponse && (
+            <div className="p-3 rounded-lg bg-muted/30 border border-border">
+              <p className="text-xs font-semibold text-muted-foreground mb-1">Admin Response to your appeal:</p>
+              <p className="text-sm text-foreground">{user.adminAppealResponse}</p>
             </div>
           )}
         </CardContent>
@@ -371,26 +378,5 @@ export default function UserStatus() {
         </Card>
       )}
     </div>
-  );
-}
-
-// Need to import Ban for the alert
-function Ban(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-    </svg>
   );
 }
