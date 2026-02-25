@@ -1,0 +1,123 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Scrambly Moderation Platform — Moderator & Admin Dashboard (Frontend)",
+  "requirements": [
+    {
+      "id": "REQ-5",
+      "summary": "Build an admin panel page accessible only to Jourdain Rodriguez showing moderators, pending reports, and pending appeals with action buttons",
+      "acceptanceCriteria": [
+        "Admin panel is only visible/accessible when logged in as Jourdain Rodriguez.",
+        "All three sections are visible in the admin panel with live data from the backend.",
+        "Clicking 'Ban Moderator' calls the resolveModeratorReport or direct ban function and updates the UI.",
+        "Approve/Deny buttons on appeals call the reviewAppeal function and refresh the list."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminPanel.tsx",
+          "operation": "create",
+          "description": "Create admin panel page that displays three sections: (1) list of all moderators with status and 'Ban Moderator' button for active moderators, calling backend functions to ban; (2) list of pending moderator reports with 'Ban Moderator' and 'Dismiss' buttons calling resolveModeratorReport; (3) list of pending ban appeals with 'Approve' and 'Deny' buttons calling reviewAppeal. Use the authorization component to verify admin access. Include real-time data fetching and UI updates after actions. Wire the generated logo image from frontend/public/assets/generated/scrambly-mod-logo.dim_256x256.png."
+        },
+        {
+          "path": "frontend/src/hooks/useAdminData.ts",
+          "operation": "create",
+          "description": "Create React Query hooks for fetching admin data: useGetAllModerators, useGetModeratorReports, useGetPendingAppeals (filter users with pending appeal status). Include mutations for banning moderators, resolving reports, and reviewing appeals with automatic query invalidation on success."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Add route registration for /admin mapping to AdminPanel page. Add admin-only navigation link that checks if the current user is admin using isCallerAdmin before displaying."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Build a moderator dashboard page accessible only to active, non-banned moderators showing searchable user list with moderation actions",
+      "acceptanceCriteria": [
+        "Moderator dashboard is only visible to authenticated moderators.",
+        "User list updates in real time after any moderation action.",
+        "Issue Warning opens an inline form for a reason, then submits.",
+        "Ban User opens an inline form for a reason, then submits.",
+        "Instant Ban button immediately fires instantBanUser without additional input.",
+        "If moderator is banned, all action buttons are disabled with a 'Your account has been suspended' notice."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/ModeratorDashboard.tsx",
+          "operation": "create",
+          "description": "Create moderator dashboard page with searchable/filterable user list showing status, warning count, and per-user action buttons: 'Issue Warning' (inline reason input), 'Ban User' (inline reason input), 'Instant Ban for Pornographic Content' (one-click). Use authorization component to verify moderator access. Check moderator status and disable all actions with a notice if the moderator is banned. Use backend functions issueWarning, banUser, instantBanUser. Include real-time list updates after actions."
+        },
+        {
+          "path": "frontend/src/hooks/useModeratorData.ts",
+          "operation": "create",
+          "description": "Create React Query hooks for moderator operations: useGetAllUsers for fetching the user list, and mutations for issueWarning, banUser, and instantBanUser with automatic query invalidation. Include a hook to check the current moderator's status from the backend."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Add route registration for /moderator mapping to ModeratorDashboard page. Add moderator-only navigation link visible to users with moderator role."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Build a user-facing status page showing ban status, appeal submission, appeal status, warnings history, and moderator reporting",
+      "acceptanceCriteria": [
+        "Banned users see a clear 'You are banned' notice with the reason.",
+        "Appeal form is shown only when user is banned and has no pending appeal.",
+        "Appeal status ('Pending review', 'Approved', 'Denied') is shown when an appeal exists.",
+        "Warning history shows each warning's reason and date.",
+        "'Report a Moderator' section is visible only if user has at least one warning and allows selecting which moderator to report with a reason."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/UserStatus.tsx",
+          "operation": "create",
+          "description": "Create user status page that displays: (1) ban notice with reason if user is banned; (2) appeal submission form (textarea + submit) shown only if banned and no pending appeal; (3) current appeal status display; (4) list of received warnings with reason, timestamp, and issuing moderator; (5) 'Report a Moderator' section with moderator selector and reason field, visible only if user has at least one warning. Use backend functions getUser, submitAppeal, getMyAppealStatus, getUserWarnings, and reportModerator. Use authorization component to ensure user is authenticated."
+        },
+        {
+          "path": "frontend/src/hooks/useUserStatus.ts",
+          "operation": "create",
+          "description": "Create React Query hooks for user status operations: useGetCurrentUser (fetch user data by userId), useGetUserWarnings, useGetAppealStatus, and mutations for submitAppeal and reportModerator with automatic query invalidation."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Add route registration for /status mapping to UserStatus page. Add user-facing navigation link visible to all authenticated users."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Apply a bold, dark-themed visual design across the entire app with deep charcoal backgrounds, high-contrast accent colors, clean typography, and card-based layouts",
+      "acceptanceCriteria": [
+        "All pages share a consistent color palette and typography.",
+        "Destructive actions (ban, instant ban) use a red or red-orange color.",
+        "Positive actions (approve appeal, dismiss report) use a teal or green color.",
+        "Layout is clean, card-based, and usable on desktop screens."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Update global styles to implement dark theme: set deep charcoal/near-black backgrounds (#0f0f0f, #1a1a1a), high-contrast text colors (white, light gray), define CSS variables for accent colors (red-orange for destructive actions like --color-destructive, teal/green for positive actions like --color-positive), and apply clean sans-serif font stack. Ensure card-based layout styling with subtle borders and shadows."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Extend Tailwind theme to include custom dark palette colors: charcoal backgrounds, red-orange destructive accent, teal/green positive accent. Add custom spacing and typography settings for authority-themed design. Configure card component styling with borders and shadows."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "create",
+          "description": "Create a Layout component that wraps all pages with consistent navigation, header with the generated logo from frontend/public/assets/generated/scrambly-mod-logo.dim_256x256.png, and footer. Apply dark theme styling and ensure navigation links are role-aware (admin, moderator, user). Use authorization component to determine which links to display based on user role."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wrap all routes with the Layout component to ensure consistent dark-themed styling and navigation across all pages."
+        }
+      ]
+    }
+  ]
+}

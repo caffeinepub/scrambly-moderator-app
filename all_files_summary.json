@@ -1,0 +1,23 @@
+{
+  "backend/main.mo": "Main Motoko actor defining data types (User, Moderator, Warning, ModeratorReport) and backend logic for user profiles, moderator actions (warn, ban), admin operations (ban appeals, moderator reports), and role-based access control via a MixinAuthorization mixin.",
+  "feature_evidence.json": "Feature evidence report mapping implemented features (admin panel, moderator dashboard, user status page) to their source files, component dependencies, and test IDs with confidence ratings.",
+  "frontend-file-summaries.txt": "JSON document containing one-line summaries for each frontend source file, serving as a quick reference index for the frontend codebase.",
+  "frontend/index.css": "Tailwind CSS entry file defining OKLCH-based CSS custom properties for light and dark themes, covering background, foreground, card, border, chart, and sidebar color tokens.",
+  "frontend/index.html": "Minimal HTML shell for the Scrambly Moderator App that mounts the React app into a root div and loads the Vite entry point.",
+  "frontend/src/App.tsx": "Root React component that configures TanStack Router with role-based route guards (AdminGuard, ModeratorGuard, AuthGuard), wraps the app in ThemeProvider and Toaster, and conditionally shows the ProfileSetupModal for new users.",
+  "frontend/src/components/Layout.tsx": "Persistent app shell rendering a sticky header with logo, role-aware navigation links (admin/moderator/user), and an Internet Identity auth button with login/logout handling.",
+  "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog that collects a new user's name and username on first login, submitting the profile via the useSaveCallerUserProfile mutation and blocking dismissal until saved.",
+  "frontend/src/hooks/useActor.ts": "Custom hook that creates and caches an ICP backend actor using React Query, supporting both anonymous and authenticated (Internet Identity) usage, and invalidates dependent queries when the actor changes.",
+  "frontend/src/hooks/useInternetIdentity.ts": "Provides an Internet Identity authentication context and provider component, exposing login/logout functions, identity state, and login status via a React context hook.",
+  "frontend/src/hooks/useQueries.ts": "Centralizes all React Query hooks for backend interactions, including queries and mutations for user profiles, roles, moderators, users, reports, warnings, and appeals.",
+  "frontend/src/index.css": "Global stylesheet that imports fonts, sets up Tailwind CSS, defines a dark-theme CSS custom property design system (colors, chart tokens, sidebar tokens), and adds utility classes for glow and card effects.",
+  "frontend/src/main.tsx": "Application entry point that mounts the React app with React Query and Internet Identity providers wrapping the root App component.",
+  "frontend/src/pages/AccessDenied.tsx": "Simple page component that displays an access-denied message with a shield icon and a link back to the home page.",
+  "frontend/src/pages/AdminPanel.tsx": "Admin panel page with tabbed UI for managing moderators, reviewing moderator reports, and handling user appeals, using mutation hooks to resolve reports and ban moderators.",
+  "frontend/src/pages/HomePage.tsx": "Landing page that displays platform features, a login button for unauthenticated users, and navigation links to the admin or moderator dashboard based on the caller's role.",
+  "frontend/src/pages/ModeratorDashboard.tsx": "Moderator dashboard page that displays a searchable list of all users with their status and warning count, and provides per-user action buttons (Issue Warning, Ban User, Instant Ban) with form inputs for reasons; all actions are disabled if the moderator is banned.",
+  "frontend/src/pages/UserStatus.tsx": "User-facing status page showing ban status, appeal submission/status, received warnings list, and a form to report a moderator if the user has at least one warning.",
+  "frontend/src/utils/urlParams.ts": "Utility functions for extracting URL parameters from both query strings and hash-based routing, with helpers for persisting values to/from sessionStorage and cleaning sensitive params from the URL.",
+  "frontend/tailwind.config.js": "Tailwind CSS configuration defining a dark-themed design system with OKLCH color tokens, custom fonts (Inter, Space Grotesk), extended border radii, box shadows, and animation keyframes.",
+  "project_state.json": "Project state metadata describing the Scrambly moderation app's architecture, role hierarchy (Admin > Moderator > User), implemented features, and image requirements."
+}

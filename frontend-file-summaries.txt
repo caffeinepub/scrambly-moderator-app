@@ -1,0 +1,13 @@
+{
+  "frontend/src/index.css": "Global dark-themed styles with OKLCH color system featuring deep charcoal backgrounds, red-orange destructive accents, teal positive accents, and Inter/Space Grotesk typography.",
+  "frontend/tailwind.config.js": "Extended Tailwind config with custom dark palette, Space Grotesk display font, positive/warning color tokens, and card shadow utilities.",
+  "frontend/src/hooks/useQueries.ts": "All React Query hooks for backend operations including user profile, admin functions (moderators, reports, appeals), moderator actions (warn, ban, instant ban), and user status operations.",
+  "frontend/src/components/Layout.tsx": "Persistent app shell with sticky header, role-aware navigation (admin/moderator/user links), logo, auth button, and branded footer with caffeine.ai attribution.",
+  "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog for first-time login profile setup, collecting name and username, shown only when authenticated user has no profile.",
+  "frontend/src/pages/HomePage.tsx": "Landing page with hero section, feature cards, role explanation, and contextual CTA buttons based on authentication and admin status.",
+  "frontend/src/pages/AdminPanel.tsx": "Admin-only panel with tabbed interface for managing moderators, reviewing pending moderator reports (ban/dismiss), reviewing ban appeals (approve/deny), and adding new moderators/users.",
+  "frontend/src/pages/ModeratorDashboard.tsx": "Moderator dashboard with searchable/filterable user list, per-user inline action forms for warnings and bans, and one-click instant ban for pornographic content.",
+  "frontend/src/pages/UserStatus.tsx": "User-facing status page showing ban status, appeal submission form, warning history, and moderator reporting form (visible only to users with at least one warning).",
+  "frontend/src/pages/AccessDenied.tsx": "Simple access denied page shown when unauthorized users attempt to access restricted routes.",
+  "frontend/src/App.tsx": "Main app with TanStack Router setup, role-based route guards (AdminGuard, ModeratorGuard, AuthGuard), ThemeProvider, profile setup modal integration, and Sonner toaster."
+}

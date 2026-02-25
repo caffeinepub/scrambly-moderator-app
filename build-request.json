@@ -1,0 +1,192 @@
+{
+  "kind": "build_request",
+  "title": "Scrambly Moderation Platform — Moderator & Admin Dashboard",
+  "projectName": "Scrambly Mod Hub",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Build a backend data model and actor with the following entities: User (id, username, status: active/warned/banned, warningCount, banReason, banAppealText, banAppealStatus: none/pending/reviewed, isBanned), Moderator (id, principal, name, status: active/banned, banReason), Warning (id, targetUserId, issuedByModeratorId, reason, timestamp), ModeratorReport (id, reportedModeratorId, reportedByUserId, reason, timestamp, status: pending/resolved), and a hardcoded admin identity for 'Jourdain Rodriguez'. Persist all data in stable storage.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "the admin is Jourdain Rodriguez",
+          "moderators get as much warnings they can give the users",
+          "the admin can ban the moderators too"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All entities are stored in stable variables and survive canister upgrades.",
+        "Admin identity is locked to 'Jourdain Rodriguez' by name/principal.",
+        "Warning records track which moderator issued them and when.",
+        "ModeratorReport records track status (pending/resolved)."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Implement backend functions for moderator actions: issueWarning(userId, reason) — add a warning to a user with no cap on how many warnings can be given; banUser(userId, reason) — ban a user for disrespectful, unkind, or inappropriate behavior; instantBanUser(userId) — immediately ban a user flagged for pornographic content (ban takes effect instantly, no confirmation step); all three functions must be callable only by authenticated moderators (not banned moderators).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "moderators get as much warnings they can give the users",
+          "pornographic should be banned instantly",
+          "the moderator can choose to ban"
+        ]
+      },
+      "acceptanceCriteria": [
+        "issueWarning stores a Warning record linked to the moderator's ID.",
+        "banUser sets user status to banned with the given reason.",
+        "instantBanUser sets user status to banned immediately with reason 'Pornographic content'.",
+        "Banned moderators cannot call any moderation function.",
+        "Functions return an error if called by a non-moderator identity."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Implement backend functions for the ban appeal system: submitAppeal(userId, appealText) — lets a banned user submit an appeal message; reviewAppeal(userId, decision: approve/deny) — admin-only function to approve (unban) or deny the appeal; getMyAppealStatus(userId) — returns current appeal status for a user.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "banned instantly untill appeal is applied"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A banned user can submit exactly one pending appeal at a time.",
+        "On appeal approval, user status is reset to active and ban is lifted.",
+        "On appeal denial, ban remains and appeal status is set to 'reviewed'.",
+        "Only the admin can call reviewAppeal.",
+        "Appeal status is readable by the user and the admin."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement backend functions for the report-a-moderator system: reportModerator(moderatorId, reason) — lets a user who received at least one warning report the moderator who issued it; getModeratorReports() — admin-only query to list all pending reports; resolveModeratorReport(reportId, banModerator: Bool) — admin-only function to mark the report resolved and optionally ban the reported moderator.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "if the users get 1 warning for bad reason they can report the moderator for a ban to the admin",
+          "the admin can ban the moderator"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Only users who have at least one warning on record can submit a moderator report.",
+        "Each report is stored with status 'pending' until the admin resolves it.",
+        "When banModerator is true on resolution, the moderator's status is set to banned.",
+        "Only the admin can call getModeratorReports and resolveModeratorReport.",
+        "A moderator who is banned cannot issue warnings or bans."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Build an admin panel page (accessible only to Jourdain Rodriguez) that shows: (1) a list of all moderators with their status and a 'Ban Moderator' action button for active moderators; (2) a list of all pending moderator reports with reporter info, reason, and 'Ban Moderator' / 'Dismiss' action buttons; (3) a list of all pending ban appeals with user info, appeal text, and 'Approve Appeal' / 'Deny Appeal' action buttons.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "the admin can ban the moderators too",
+          "report the moderator for a ban to the admin",
+          "the admin can ban the moderator"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin panel is only visible/accessible when logged in as Jourdain Rodriguez.",
+        "All three sections are visible in the admin panel with live data from the backend.",
+        "Clicking 'Ban Moderator' calls the resolveModeratorReport or direct ban function and updates the UI.",
+        "Approve/Deny buttons on appeals call the reviewAppeal function and refresh the list."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Build a moderator dashboard page (accessible only to active, non-banned moderators) that shows: (1) a searchable list of all users with their current status (active/warned/banned) and warning count; (2) per-user action buttons: 'Issue Warning' (with a reason input), 'Ban User' (with a reason input), and 'Instant Ban for Pornographic Content' (one-click, no extra input); (3) a disabled/greyed-out state for all action buttons if the moderator is banned.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "moderators get as much warnings they can give the users",
+          "the moderator can choose to ban",
+          "pornographic should be banned instantly"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Moderator dashboard is only visible to authenticated moderators.",
+        "User list updates in real time after any moderation action.",
+        "Issue Warning opens an inline form for a reason, then submits.",
+        "Ban User opens an inline form for a reason, then submits.",
+        "Instant Ban button immediately fires instantBanUser without additional input.",
+        "If moderator is banned, all action buttons are disabled with a 'Your account has been suspended' notice."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Build a user-facing status page where a user can: (1) see if they are banned and the reason; (2) submit a ban appeal with a text message if no appeal is currently pending; (3) view their current appeal status (none / pending / approved / denied); (4) view their list of received warnings with reasons and timestamps; (5) report a moderator (with a reason text field) if they have received at least one warning — this submits a moderator report to the admin.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "banned instantly untill appeal is applied",
+          "if the users get 1 warning for bad reason they can report the moderator for a ban to the admin"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Banned users see a clear 'You are banned' notice with the reason.",
+        "Appeal form is shown only when user is banned and has no pending appeal.",
+        "Appeal status ('Pending review', 'Approved', 'Denied') is shown when an appeal exists.",
+        "Warning history shows each warning's reason and date.",
+        "'Report a Moderator' section is visible only if user has at least one warning and allows selecting which moderator to report with a reason."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Apply a bold, dark-themed visual design across the entire app: deep charcoal/near-black backgrounds, high-contrast accent color (e.g., red-orange for destructive actions, teal/green for approvals), clean sans-serif typography, card-based layout for lists and panels, and clear visual hierarchy that communicates authority and safety for a moderation context.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All pages share a consistent color palette and typography.",
+        "Destructive actions (ban, instant ban) use a red or red-orange color.",
+        "Positive actions (approve appeal, dismiss report) use a teal or green color.",
+        "Layout is clean, card-based, and usable on desktop screens."
+      ]
+    }
+  ],
+  "constraints": [
+    "The admin identity is exclusively 'Jourdain Rodriguez' — no other user can access admin functions.",
+    "Banned moderators must not be able to perform any moderation actions.",
+    "Pornographic content bans must be instant with no extra confirmation step required from the moderator.",
+    "Do not expose the caffeineAdminToken URL in any part of the application."
+  ],
+  "nonGoals": [
+    "Real-time chat or messaging between moderators and users.",
+    "Automated content scanning or AI moderation.",
+    "Email or push notification alerts.",
+    "Multiple admin accounts — only one admin (Jourdain Rodriguez) is supported.",
+    "OAuth or third-party login — only Internet Identity is supported."
+  ],
+  "imageRequirements": {
+    "required": [
+      "Dark shield badge logo with a stylized 'S' monogram, authority-themed moderation emblem (scrambly-mod-logo.dim_256x256.png)"
+    ],
+    "edits": []
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-build-an-admin-panel-page-accessible-only-to-jourdain-rodriguez-that-shows-1-a-list-of-all-moderators-with-their-status-and-a-ban-moderator-action-button-for-active-moderators-2-a-list-of-all-pending-moderator-reports-with-reporter-info-reason-and-ban-moderator-dismiss-action-buttons-3-a-list-of-all-pending-ban-appeals-with-user-info-appeal-text-and-approve-appeal-deny-appeal-action-buttons",
+      "featureTitle": "Build an admin panel page (accessible only to Jourdain Rodriguez) that shows: (1) a list of all moderators with their status and a 'Ban Moderator' action button for active moderators; (2) a list of all pending moderator reports with reporter info, reason, and 'Ban Moderator' / 'Dismiss' action buttons; (3) a list of all pending ban appeals with user info, appeal text, and 'Approve Appeal' / 'Deny Appeal' action buttons.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/AdminPanel.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-a-moderator-dashboard-page-accessible-only-to-active-non-banned-moderators-that-shows-1-a-searchable-list-of-all-users-with-their-current-status-active-warned-banned-and-warning-count-2-per-user-action-buttons-issue-warning-with-a-reason-input-ban-user-with-a-reason-input-and-instant-ban-for-pornographic-content-one-click-no-extra-input-3-a-disabled-greyed-out-state-for-all-action-buttons-if-the-moderator-is-banned",
+      "featureTitle": "Build a moderator dashboard page (accessible only to active, non-banned moderators) that shows: (1) a searchable list of all users with their current status (active/warned/banned) and warning count; (2) per-user action buttons: 'Issue Warning' (with a reason input), 'Ban User' (with a reason input), and 'Instant Ban for Pornographic Content' (one-click, no extra input); (3) a disabled/greyed-out state for all action buttons if the moderator is banned.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/ModeratorDashboard.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-a-user-facing-status-page-where-a-user-can-1-see-if-they-are-banned-and-the-reason-2-submit-a-ban-appeal-with-a-text-message-if-no-appeal-is-currently-pending-3-view-their-current-appeal-status-none-pending-approved-denied-4-view-their-list-of-received-warnings-with-reasons-and-timestamps-5-report-a-moderator-with-a-reason-text-field-if-they-have-received-at-least-one-warning-this-submits-a-moderator-report-to-the-admin",
+      "featureTitle": "Build a user-facing status page where a user can: (1) see if they are banned and the reason; (2) submit a ban appeal with a text message if no appeal is currently pending; (3) view their current appeal status (none / pending / approved / denied); (4) view their list of received warnings with reasons and timestamps; (5) report a moderator (with a reason text field) if they have received at least one warning — this submits a moderator report to the admin.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/UserStatus.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-bold-dark-themed-visual-design-across-the-entire-app-deep-charcoal-near-black-backgrounds-high-contrast-accent-color-e-g-red-orange-for-destructive-actions-teal-green-for-approvals-clean-sans-serif-typography-card-based-layout-for-lists-and-panels-and-clear-visual-hierarchy-that-communicates-authority-and-safety-for-a-moderation-context",
+      "featureTitle": "Apply a bold, dark-themed visual design across the entire app: deep charcoal/near-black backgrounds, high-contrast accent color (e.g., red-orange for destructive actions, teal/green for approvals), clean sans-serif typography, card-based layout for lists and panels, and clear visual hierarchy that communicates authority and safety for a moderation context.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

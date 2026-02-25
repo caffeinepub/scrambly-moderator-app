@@ -1,0 +1,98 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-25T10:39:23.140Z",
+  "summary": "The diff implements the majority of the Scrambly Moderation Platform requirements across backend (Motoko) and frontend (React/TypeScript). Most REQ-1 through REQ-8 items are present, but there are some gaps and a notable constraint violation regarding the caffeineAdminToken URL exposure.",
+  "missing_requirements": [
+    {
+      "requirement": "Do not expose the caffeineAdminToken URL in any part of the application.",
+      "reason": "The frontend/src/hooks/useActor.ts explicitly calls getSecretParameter('caffeineAdminToken') and passes it to _initializeAccessControlWithSecret. The utility file frontend/src/utils/urlParams.ts contains a comment example showing '?caffeineAdminToken=xxx' in the URL, and the function reads it from the URL. The token name is exposed in source code and URL parameter handling, violating the constraint.",
+      "evidence": [
+        "frontend/src/hooks/useActor.ts",
+        "frontend/src/utils/urlParams.ts"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Admin identity is locked to 'Jourdain Rodriguez' by name/principal.",
+      "reason": "The backend sets ADMIN_ID = 'jourdain_rodriguez' as a text string but the diff is truncated and does not show how the admin principal is validated against an actual Internet Identity principal. The access control relies on external MixinAuthorization/AccessControl modules whose full implementation is not shown, making it unclear whether the admin is truly locked by principal.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Admin panel must show a 'Ban Moderator' action button for active moderators in the moderator list section (direct ban without going through a report).",
+      "reason": "The ModeratorCard component in AdminPanel.tsx shows moderator status but the code is truncated. The visible code imports addModerator (not a ban function) and has banning=useState(false) but no confirmed ban action call is visible in the truncated diff. The direct ban button for moderators in the list cannot be confirmed.",
+      "evidence": [
+        "frontend/src/pages/AdminPanel.tsx"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Appeal status 'Approved' must be shown distinctly when an appeal is approved.",
+      "reason": "The appealStatusConfig in UserStatus.tsx only maps 'none', 'pending', and 'reviewed' states. There is no 'approved' state mapped for display. The spec requires showing 'Approved' status distinctly but this case is not handled in the UI.",
+      "evidence": [
+        "frontend/src/pages/UserStatus.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "ProfileSetupModal and user profile setup flow collecting name and username on first login",
+      "reason": "The build request does not mention any profile setup modal, onboarding flow, or name/username collection for general users. The saveCallerUserProfile, getCallerUserProfile, and ProfileSetupModal are not part of any requirement.",
+      "evidence": [
+        "frontend/src/components/ProfileSetupModal.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/App.tsx"
+      ]
+    },
+    {
+      "description": "addModerator and addUser admin functions exposed in the Admin Panel UI",
+      "reason": "The build request does not specify UI for adding new moderators or users from the admin panel. The AdminPanel.tsx imports useAddModerator and useAddUser, which were not requested.",
+      "evidence": [
+        "frontend/src/pages/AdminPanel.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    },
+    {
+      "description": "_initializeAccessControlWithSecret actor initialization with caffeineAdminToken secret parameter",
+      "reason": "The build request does not mention any token-based access control initialization or secret parameter mechanism. This is an entirely invented mechanism not present in the requirements.",
+      "evidence": [
+        "frontend/src/hooks/useActor.ts",
+        "frontend/src/utils/urlParams.ts"
+      ]
+    },
+    {
+      "description": "MixinAuthorization and AccessControl external modules integrated into the backend actor",
+      "reason": "The requirements specify a hardcoded admin identity and role checks but do not mention a MixinAuthorization pattern or an AccessControl module abstraction. These are additional architectural choices beyond what was requested.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/components/ProfileSetupModal.tsx",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/pages/AccessDenied.tsx",
+    "frontend/src/pages/AdminPanel.tsx",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/ModeratorDashboard.tsx",
+    "frontend/src/pages/UserStatus.tsx",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}
